@@ -1,0 +1,566 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h2 id="module-4-iterators-and-time-complexity">Module 4: Iterators and Time Complexity</h2>
+<p>In this module, we will make one final modification to our singly-linked list data structure, to allow us to efficiently iterate through the list, from the outside of the list, without having access to the pointer structure of the list. We will do this by adding support for <em>iterators</em> to our list.</p>
+<p>In addition, our studies here will lead us into the concept of <em>algorithmic complexity</em>, or <em>time complexity</em>, and a mathematical concept called <em>asymptotic notation</em> or <em>order notation</em>.</p>
+<h3 id="the-need-for-iterators">The need for iterators</h3>
+<p>Let us revisit the heart of the sample application from the previous module. If you recall, we used a <code>SLL</code> to hold a series of movie objects, and then searched the list for movies matching a given keywords, with this function:</p>
+<pre><code>SLL&lt;Movie&gt; findKeywordMatches(const SLL&lt;Movie&gt; &amp;movies, std::string keyword) {
+    SLL&lt;Movie&gt; matches;
+
+
+    for(size_t i = 0; i &lt; movies.size(); i++) {
+        Movie m = movies.get(i);
+        if(m == keyword) {
+            matches.add(m);
+        }
+    }
+
+
+    return matches;
+}</code></pre>
+<p>What concerns us here is the amount of time taken by the <code>SLL::get</code> method, reproduced here:</p>
+<pre><code>T SLL&lt;T&gt;::get(unsigned idx) const {
+    // if the idx is past list end, throw an exception
+    if(idx &gt;= n) {
+        throw std::out_of_range(&quot;Index out of range in SLL::get()&quot;);
+    }
+
+
+    // initialize cursor
+    Node *pCurr = pHead;
+
+
+    // iterate cursor to position
+    for(unsigned i = 0u; i &lt; idx; i++) {
+        pCurr = pCurr-&gt;pNext;
+    }
+
+
+    // return requested value
+    return pCurr-&gt;data;
+}</code></pre>
+<p>Unlike an array, we are not able to directly access element <em>i</em> of a list. Rather, we start at the head of the list (element 0), and then have to iterate through each element before <span class="math inline"><em>i</em></span> in order to get to the proper location.</p>
+<p>This is a problem, especially if we have to repeatedly iterate through all of the elements of the list, as is the case with the movie keyword application. Abstractly, if there are <em>n</em> elements in the list, it takes 1 &quot;step&quot; to get to the first element of the list, 2 steps for the second element, 3 for the third element, and so on. This series of equations shows how many steps are required to iterate through the whole <code>SLL</code>:</p>
+<p><img src="https://doane.instructure.com/files/918445/download?download_frd=1" alt="Sum of integers 1 to n" title="Sum of integers 1 to n"/></p>
+<p>We see that an algorithm takes roughly <em>n<sup>2</sup></em> steps to iterate through the <em>n</em> elements in the list, which is, frankly, unacceptable. To make a single trip through the list, we would like to spend only <em>n</em> steps in our algorithm. <em>If</em> we had access to the pointers and nodes of the <code>SLL</code> from the outside, we could try something like this:</p>
+<pre><code>SLL&lt;Movie&gt; findKeywordMatches(const SLL&lt;Movie&gt; &amp;movies, std::string keyword) {
+    SLL&lt;Movie&gt; matches;
+    SLL&lt;Movie&gt;::Node *pCurr = movies.pHead;
+
+
+    while(pCurr != 0) {
+        Movie m = pCurr-&gt;data;
+        if(m == keyword) {
+            matches.add(m);
+        }
+        pCurr = pCurr-&gt;pNext;
+    }
+
+
+    return matches;
+}</code></pre>
+<p>But this is also unacceptable. One of the principles of object-oriented programming is <em>encapsulation</em>. In encapsulation, and object hides its internal details from its users, so that the user of the object only has to know how to use the object, not how it works internally. Plus, now that you have worked with C++ for three modules, you can probably appreciate that working with pointers is tricky business. It is easy to accidentally do something really, really bad if you are not careful, and so we would prefer to keep the internal structure of the list (the pointers, especially) hidden from the user of the list.</p>
+<p>All is not lost! We can have linear-time traversal of our list without exposing the internal structure, by adding an iterator to the class.</p>
+<h3 id="introducing-the-iterator">Introducing the iterator</h3>
+<p><strong>[For this section, refer to the <code>module04\1-IteratorSLL\IteratorSLL.hpp</code> file from the course's git repository.]</strong></p>
+<p>An <em>iterator</em> is an object we can use to efficiently iterate through the contents of a data structure, from outside the structure, without having access to the internal structure itself. We can think of an iterator as an encapsulated pointer, that lets us access the data at a particular location in the data structure, and advance to the next location, without actually touching the pointers in the structure.</p>
+<p>We define our <code>Iterator</code> class as an inner class of <code>IteratorSLL</code>, just as <code>Node</code> has been an inner class of our lists since Module 2. One difference is that <code>Iterator</code> will be a public inner class, while <code>Node</code> is a private inner class. <code>Iterator</code> is public because we want users of the <code>IteratorSLL</code> class to be able to access it, while <code>Node</code> is private because we do not want users to have access to the internal implementation of the list.</p>
+<p>This UML class diagram shows the methods and fields associated with the <code>Iterator</code> class:</p>
+<p><img src="https://doane.instructure.com/files/919348/download?download_frd=1" alt="Iterator UML" title="Iterator UML"/></p>
+<p>Working our way from the top to the bottom of the class diagram, we can see that there is one field in the <code>Iterator</code>: <code>pCurr</code>, a private-access pointer to a <code>Node</code> object. This is the pointer that the <code>Iterator</code> is designed to safely encapsulate.</p>
+<p>Next, there are four operator overrides in <code>Iterator</code>: dereferencing (<code>*</code>), equality (<code>==</code>), inequality (<code>!=</code>), and postfix increment (<code>++</code>). We will look at these shortly.</p>
+<p>The last item in the class diagram is the constructor, but note that it has private access. We do this so that users of our <code>IteratorSLL</code> cannot instantiate an <code>Iterator</code> on their own. Rather, users will get an iterator by calling methods from the <code>IteratorSLL</code> class.</p>
+<p>Let's take one more look at how we might implement the Module 3 movie keyword search function, but this time using our <code>IteratorSLL</code> that has an iterator.</p>
+<pre><code>IteratorSLL&lt;Movie&gt; findKeywordMatches(const IteratorSLL&lt;Movie&gt; &amp;movies,
+  std::string keyword) {
+
+
+    IteratorSLL&lt;Movie&gt; matches;
+    IteratorSLL&lt;Movie&gt;::Iterator i = movies.front();
+
+
+    while(i != movies.end()) {
+        Movie m = *i;
+        if(m == keyword) {
+            matches.add(m);
+        }
+        i++;
+    }
+
+
+    return matches;
+}</code></pre>
+<p>We get an <code>Iterator</code> instance situated at the front of the list by calling the list's <code>front</code> method. Then, we have a loop that keeps going until the iterator has moved through all the list elements and reached the special end-of-list iterator, accessed via the list's <code>end</code> method. Inside the loop, we dereference the iterator via <code>*</code> to get the current movie, and then move to the next movie in the list via the postfix increment operator <code>++</code> at the end of the loop body. This traversal of the list using iterators takes <em>n</em> steps to traverse a list of <em>n</em> elements, without exposing the pointer structure of the list.</p>
+<h3 id="implementing-the-iterator">Implementing the iterator</h3>
+<p>Now that we have an idea of what an iterator is, why we want one, and how to use one, let us turn to the implementation of the iterator.</p>
+<h4 id="iterator-declaration">Iterator declaration</h4>
+<p>As we mentioned above, the <code>Iterator</code> class is a public inner class of the latest version of the singly-linked list, <code>IteratorSLL</code>. The list class, from a user's point of view, is only slightly different from the <code>SLL</code> class in the previous module, as we can see in its UML class diagram:</p>
+<p><img src="https://doane.instructure.com/files/923646/download?download_frd=1" alt="IteratorSLL UML class diagram" title="IteratorSLL UML class diagram"/></p>
+<p>There are two new methods: <code>end</code> and <code>front</code>, which return iterators to the end of the list and the first element in the list, respectively. We will examine these methods after we have inspected the implementation of the iterator itself.</p>
+<p>Internally, the <code>Iteraltor</code> inner class is declared in a public section of <code>IteratorSLL</code>, right after the <code>Node</code> class declaration. The <code>Iterator</code> class is reproduced here, with the comments removed:</p>
+<pre><code>class Iterator {
+public:
+    T &amp;operator*();
+
+
+    bool operator==(const Iterator &amp;other) const {
+        return pCurr == other.pCurr;
+    }
+
+
+    bool operator!=(const Iterator &amp;other) const {
+        return pCurr != other.pCurr;
+    }
+
+
+    Iterator &amp;operator++(int dummy);
+
+
+    friend class IteratorSLL;
+
+
+private:
+    Iterator(Node *pC) : pCurr(pC) { }
+    Node *pCurr;
+};
+
+</code></pre>
+<p>We declare four operators for use with our iterator:</p>
+<dl>
+<dt><code>*</code></dt>
+<dd>dereferencing operator. This operator allows us to get the value stored at a particular location in the list. If <code>i</code> is an iterator to a certain node in the list, then <code>*i</code> is a reference to the value stored in that node.
+</dd>
+<dt><code>==</code>, <code>!=</code></dt>
+<dd>equality and inequality operators. These allow us to tell when we have reached the end of the list, e.g. for iterator <code>i</code> and a list named <code>list</code>, <code>while(i != list.end())</code> iterates until the end of the list is reached. These are defined here, since they are short functions. The functions compare the value of this iterator's node pointer with the node pointer of another iterator.
+</dd>
+<dt><code>++</code></dt>
+<dd>postfix increment operator. This increments the iterator from one node to the next one in the list. The <code>dummy</code> parameter in the declaration is not involved in the operator, but serves simply to let the compiler know that we are overriding the postfix version (<code>i++</code>) of the operator instead of the prefix version (<code>++i</code>).
+</dd>
+</dl>
+<p>After the operator override declarations, we make the enclosing <code>IteratorSLL</code> class a friend of the <code>Iterator</code> class, so that the <code>front</code> and <code>end</code> methods will be able to access the private constructor.</p>
+<p>Note again that <code>Iterator</code> does not have a public constructor. This prevents users of the <code>IteratorSLL</code> class from instantiating an iterator themselves. Users of our list should not be allowed to do that, since creating an iterator requires a pointer to a list node, and we are trying to prevent list users from accessing the pointers. So, the <code>Iterator</code> constructor is declared in a private section. This way, users of <code>IteratorSLL</code> cannot build an iterator, but the <code>front</code> and <code>end</code> methods of the list, which can be trusted to access pointers, can access the private constructor, since <code>IteratorSLL</code> is a friend. The constructor does all of its work with the initialization list, so it has an empty body.</p>
+<p>The last item in the <code>Iterator</code> class declaration is the pointer to a list node, <code>pCurr</code>.</p>
+<h4 id="iterator-function-definitions">Iterator function definitions</h4>
+<p>The function implementations for the two remaining <code>Iterator</code> operator overrides occur later in the <code>IteratorSLL.hpp</code> file, after the class declaration. The dereferencing operator,</p>
+<pre><code>template &lt;class T&gt;
+T &amp;IteratorSLL&lt;T&gt;::Iterator::operator*() {
+    // if the iterator is past the end of the list, throw an exception
+    if(pCurr == 0) {
+        throw std::out_of_range(&quot;Dereferencing beyond list end in &quot;
+                                &quot;Iterator::*()&quot;);
+    }
+
+
+    return pCurr-&gt;data;
+}</code></pre>
+<p>first checks to make sure that the iterator is referring to a valid node in the list. If not, a <code>std::out_of_range</code> exception is thrown. If the iterator <em>does</em> refer to an existing node of the list, we simply return a reference to the node's data element.</p>
+<p>The increment operator definition looks like this:</p>
+<pre><code>template &lt;class T&gt;
+typename IteratorSLL&lt;T&gt;::Iterator 
+    &amp;IteratorSLL&lt;T&gt;::Iterator::operator++(int dummy) {
+        
+    // if the iterator is past the end of the list, throw an exception
+    if(pCurr == 0) {
+        throw std::out_of_range(&quot;Increment beyond list end in &quot;
+                                &quot;Iterator::++()&quot;);
+    }
+
+
+    pCurr = pCurr-&gt;pNext;
+    return *this;
+}</code></pre>
+<p>The signature of this override is particularly long, so let's unpack it, one piece at a time, from left to right. First, we have the return type of the function, <code>typename IteratorSLL&lt;T&gt;::Iterator &amp;</code>. The <code>typename</code> keyword here indicates that our intention is that the following piece of code is to be used as a type -- a reference to an iterator -- rather than being interpreted as the beginning of a function definition.</p>
+<p>Next we have the name of the function we are writing: <code>IteratorSLL&lt;T&gt;::Iterator::operator++</code>. This says we're overriding the <code>++</code> operator from the <code>Iterator</code> class, which is a nested class inside <code>IteratorSLL&lt;T&gt;</code>.</p>
+<p>Finally, we have the parameter for the function, <code>int dummy</code>. This parameter is not part of the operation of the operator, but it tells the compiler that this is the postfix <code>++</code>. If we left the parameter out, we would be overriding the prefix <code>++</code>, and would have to increment our iterator like this: <code>++i</code>. The operation would be the same, but we don't usually use the prefix version, so we take an extra step -- the dummy parameter -- to specify the postfix version.</p>
+<p>The code of the override itself first checks to see that the iterator refers to a node in the list. If not, a <code>std::out_of_range</code> exception is thrown. Provided the iterator refers to a list node, we advance the <code>pCurr</code> pointer to the next node in the list, and then return a reference to the iterator, via <code>return *this</code>.</p>
+<h4 id="iterator-factory-methods">Iterator factory methods</h4>
+<p>In object-oriented programming, a <em>factory method</em> is a method that takes care of the details of creating an object. The method handles details that may be so complicated that the user is likely to implement them incorrectly, or encapsulates elements that the user should not be able to access. The <code>end</code> and <code>front</code> methods we have added to the <code>IteratorSLL</code> class are factory methods of this type. To create an iterator, we need to pass a pointer to a node into the iterator constructor, but we do not want users of the <code>IteratorSLL</code> class to have access to the pointers. So, these factory methods take care of that detail for users of the list. Since <code>end</code> and <code>front</code> are members of <code>IteratorSLL</code>, and since <code>IteratorSLL</code> is a friend of the <code>IteratorSLL::Iterator</code> class, <code>end</code> and <code>front</code> have access to the private constructor of the inner class, while users of the list do not have this access.</p>
+<p>Both factory methods are simple, one-line methods that are defined within the class declaration. The <code>end</code> method returns an iterator with a null pointer, which indicates an iterator that is one past the last node in the list:</p>
+<pre><code>Iterator end() const { return Iterator(0); } </code></pre>
+<p>Similarly, the <code>front</code> method returns an iterator positioned on the first node in the list:</p>
+<pre><code>Iterator front() const { return Iterator(pHead); }</code></pre>
+<p>With the inner <code>IteratorSLL::Iterator</code> class, its overridden operators, and the <code>end</code> and <code>front</code> factory methods, we can now iterate through the list in an efficient way, without having access to the pointers in the list.</p>
+<h3 id="introduction-to-time-complexity-analysis">Introduction to time complexity analysis</h3>
+<p><strong>[For this section, refer to code in the <code>module04\2-TimeComplexity</code> directory from the course's git repository.]</strong></p>
+<p>To begin this section, let's use an analogy. Suppose that you have a nicely-equipped home workshop, with a variety of hammers hanging on the pegboard on the wall. You are working on a project that requires a hammer. Which one should you choose to use for the project?</p>
+<p>The answer, of course, depends on the specific problem. If the problem is re-shingling your garage, the upholstery hammer will not be a good choice. One <em>could</em> drive roofing nails home with a tiny hammer meant to secure fabric to chairs, but it would take a really, really long time. Conversely, it's probably not best to re-upholster your favorite chair using a sledge hammer.</p>
+<p>Writing computer code is like that. Very often, you are solving a problem where many different data structures and / or algorithms would work. So, which one do you choose? All other aspects being equal, we should choose the data structure / algorithm that performs the best for the problem at hand.</p>
+<p>Let's make this a little more concrete. The <code>IteratorDemo</code> application uses two types of singly-linked lists, the <code>SLL</code>, which does not have an iterator, and the <code>IteratorSLL</code> list from this module, which does. It fills the lists with random content, and then iterates through the lists, doubling the value of each even element in the lists. In the <code>SLL</code> case, this involves repeated calls to the <code>get</code> and <code>set</code> methods, while in the <code>IteratorSLL</code>, iterators are used. The application is instrumented to count the number of iterations executed by loops in the process. All of this is repeated for several trials each over a variety of list sizes. This table shows the average number of iterations for each type of list, for the growing list sizes:</p>
+<table>
+<thead>
+<tr class="header">
+<th>n</th>
+<th><code>IteratorSLL</code></th>
+<th><code>SLL</code></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>2</td>
+<td>9.200000</td>
+<td>4.800000</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>16.200000</td>
+<td>14.000000</td>
+</tr>
+<tr class="odd">
+<td>8</td>
+<td>30.200000</td>
+<td>53.600000</td>
+</tr>
+<tr class="even">
+<td>16</td>
+<td>56.200000</td>
+<td>182.800000</td>
+</tr>
+<tr class="odd">
+<td>32</td>
+<td>115.600000</td>
+<td>782.000000</td>
+</tr>
+<tr class="even">
+<td>64</td>
+<td>226.600000</td>
+<td>3,118.600000</td>
+</tr>
+<tr class="odd">
+<td>128</td>
+<td>447.800000</td>
+<td>12,002.000000</td>
+</tr>
+<tr class="even">
+<td>256</td>
+<td>903.800000</td>
+<td>50,305.000000</td>
+</tr>
+<tr class="odd">
+<td>512</td>
+<td>1,807.800000</td>
+<td>200,964.800000</td>
+</tr>
+<tr class="even">
+<td>1,024</td>
+<td>3,593.400000</td>
+<td>789,832.000000</td>
+</tr>
+<tr class="odd">
+<td>2,048</td>
+<td>7,185.200000</td>
+<td>3,175,102.600000</td>
+</tr>
+<tr class="even">
+<td>4,096</td>
+<td>14,346.000000</td>
+<td>12,591,860.400000</td>
+</tr>
+<tr class="odd">
+<td>8,192</td>
+<td>28,696.400000</td>
+<td>50,495,155.000000</td>
+</tr>
+<tr class="even">
+<td>16,384</td>
+<td>57,335.400000</td>
+<td>201,158,548.400000</td>
+</tr>
+<tr class="odd">
+<td>32,768</td>
+<td>114,679.200000</td>
+<td>805,699,603.200000</td>
+</tr>
+<tr class="even">
+<td>65,536</td>
+<td>229,467.600000</td>
+<td>3,224,056,432.000000</td>
+</tr>
+<tr class="odd">
+<td>131,072</td>
+<td>458,705.400000</td>
+<td>12,882,819,611.799999</td>
+</tr>
+<tr class="even">
+<td>262,144</td>
+<td>917,436.400000</td>
+<td>51,521,863,499.199997</td>
+</tr>
+<tr class="odd">
+<td>524,288</td>
+<td>1,834,957.400000</td>
+<td>206,144,820,050.399994</td>
+</tr>
+<tr class="even">
+<td>1,048,576</td>
+<td>3,670,482.200000</td>
+<td>824,815,857,548.199951</td>
+</tr>
+</tbody>
+</table>
+<p>Both the <code>SLL</code> and the <code>IteratorSLL</code> lists are &quot;hammers&quot; to solve the problem, but given the numbers in this table, which one would you want to use? Clearly, <code>IteratorSLL</code> is far superior in terms of performance.</p>
+<p>In this section, we introduce <em>time complexity analysis</em> and <em>order notation</em>, which are mathematical tools we can use to determine and compare the performance of various algorithms.</p>
+<h4 id="what-not-to-do">What <em>not</em> to do</h4>
+<p>First, it is important to realize that we should <em>not</em> simply use a stopwatch, or instrument our code with system timer calls, to measure the performance of an algorithm. Why not?</p>
+<p>Well, every piece of code that runs has to run on some computer, and there are many qualities of the computer itself that greatly influence how long the code takes to run. For example, the clock speed of the CPU, the amount of RAM in the machine, the speed of the non-volatile memory (spinning hard drive vs. SSD, e.g.), cache size, number of other programs running on the system, compiler settings when the code was compiled, and many other things will influence the speed of the algorithm. So, if I'm comparing algorithm A and algorithm B, both of which solve the same problem, I might run algorithm A on my laptop and my colleague might run algorithm B on her desktop. If algorithm B finishes first, does that mean it performs better than algorithm A? It's really hard to say, given all of the variables we've just mentioned.</p>
+<p>Therefore, what is needed is an abstract way to determine the algorithm's performance, that is divorced from all of the &quot;real world&quot; influences that might cause the algorithm to run faster or slower.</p>
+<h4 id="counting-fundamental-operations">Counting fundamental operations</h4>
+<p>Our abstract measure of an algorithm's performance is called the algorithm's <em>time complexity.</em> To measure an algorithm's time complexity, we do not need an actual computer at all; rather, all we need is pseudocode for the algorithm and some mathematical sophistication. The process of determining an algorithm's time complexity is called <em>time complexity analysis.</em></p>
+<p>First, we need an abstract measure of the size of the input to the algorithm. For example, if the problem we're trying to solve is the movie keyword search from the previous module, the input size is the number of movies we have to search through. We let the input size be represented by the variable <em>n</em>.</p>
+<p>Next, we find a <em>fundamental operation</em> in our algorithm. A fundamental operation is one that is executed proportionally to the total amount of &quot;work&quot; done by the algorithm. For example, let's examine a simple pseudocode algorithm for performing a linear search on an array of integers:</p>
+<pre><code>1  int linearSearch(int *pArr, int n, int key) 
+2    for(int i = 0; i &lt; n; i++)
+3      if(pArr[i] == key)
+4        return i
+5    return -1</code></pre>
+<p>The numbers at the beginning of each line are merely line numbers, they are not part of the algorithm. The algorithm searches an array <code>pArr</code>, of size <code>n</code>, for the element <code>key</code>. If <code>key</code> is in the array, the algorithm returns the index of the first occurrence of <code>key</code>. If <code>key</code> is not in the array, the algorithm returns -1, a flag value indicating the not found situation.</p>
+<p>In selecting a fundamental operation for this algorithm, we want something that happens proportional to the amount of work done by the algorithm. In this case, the search algorithm may have to look at every element in the array before finding the key or determining if it is not in the array. So, we want to select a statement in the algorithm that is executed at least once for every search operation made by the algorithm. Let's consider a few statements from the algorithm and see if they are appropriate fundamental operations.</p>
+<p>Nothing in the signature (line 1) of the algorithm is a good fundamental operation, because each piece (the parameters passed in, or the return value going out) only happens one time, regardless of the size of the array. Clearly, this is not proportional to the amount of work done by the algorithm.</p>
+<p>One might say the <code>for</code> loop in line 2 is a fundamental operation, but we would need to be more specific, because not every part of the loop header is appropriate. The initialization, <code>int i = 0</code>, only happens one time, so it is not an appropriate fundamental operation. However, the loop condition <code>i &lt; n</code> and the increment <code>i++</code> both happen once for each iteration of the loop, so they would be good choices for fundamental operations.</p>
+<p>The comparison in line 3, <code>pArr[i] == key</code>, is an excellent choice for a fundamental operation. It really is the whole purpose of the algorithm, boiled down to a single Boolean expression.</p>
+<p>Either of the return statements, <code>return i</code> in line 4 or <code>return -1</code> in line 5, are not good candidates for a fundamental operation, since they each happen only at most one time, regardless of the size of the array.</p>
+<p>So, let's say that we select the Boolean expression <code>pArr[i] == key</code> as our fundamental operation. Our next step is to write a mathematical function that expresses how many times the expression is evaluated during a search, in terms of the array size, <code>n</code>.</p>
+<p>Before we come up with such a function, however, we need to consider one more thing: will the time complexity of this algorithm be the same every time for an input of size <code>n</code>, or will it vary depending on other characteristics of the input?</p>
+<h4 id="every-case-or-best-worst-average">Every-case, or best / worst average?</h4>
+<p>Before we express our number of fundamental operations as a function of <code>n</code>, we need to decide if the algorithm has <em>every-case</em> time complexity, or <em>best-</em>, <em>worst-</em> and <em>average-case</em> time complexity.</p>
+<p>If the number of fundamental operations executed depends on the specific contents of the input, as in the linear search algorithm above, then the algorithm has best-, worst-, and average-case complexity. For linear search, the best-case situation happens when the key value is in the first element of the array. In that case, the fundamental operation happens only once. On the other hand, if the key value occurs first as the last element of the array, or if the key value is not in the array at all, then the fundamental operation happens <code>n</code> times. Those are the best- and worst-case complexities, respectively. Average-case is more complex to evaluate, but we will come to an intuitive conclusion for that situation in the next section.</p>
+<p>Not every algorithm behaves differently when the contents of the input vary. Consider this algorithm, that counts the number of even integers in an array:</p>
+<pre><code>1 int countEvens(int *pArr, int n) 
+2   int sum = 0
+3   for(int i = 0; i &lt; n; i++) 
+4     if(pArr[i] % 2 == 0)
+5       sum++
+6   return sum</code></pre>
+<p>To evaluate the time complexity of this algorithm, we first have to decide on our fundamental operation. There are three possible options for fundamental operation: the <code>i &lt; n</code> and <code>i++</code> in the loop header (line 3), or the <code>pArr[i] % 2 == 0</code> Boolean expression in the if statement (line 4). Let's use the Boolean expression.</p>
+<p>So, how many times is the Boolean expression executed for an input of size <code>n</code>? Well, since the algorithm <em>has</em> to look at each item in the array, so that it doesn't miss any even numbers it should count, the expression is <em>always</em> executed <code>n</code> times, regardless of the contents of the array. In other words, if the array contains no evens, one even, or <code>n</code> evens, the algorithm still has to look at each and every element of the array to do its work. Since it does the same amount of work regardless of input contents, this algorithm has every-case time complexity.</p>
+<p>Once we know if we are dealing with every-case or best / worst / average-case time complexity, we can express our fundamental operation count as a function of input size.</p>
+<h4 id="expression-fundamental-operations-as-a-function">Expression fundamental operations as a function</h4>
+<p>When input contents cause the algorithm to take different amounts of time, we use functions B(n), W(n), and A(n) for best, worst, and average-case time complexity. For the linear search algorithm, and the <code>pArr[i] == key</code> fundamental operation, these functions are easy to determine:</p>
+<p><img src="https://doane.instructure.com/files/961784/download?download_frd=1" alt="Linear search time complexities" title="Linear search time complexities"/></p>
+<p>The average-case time complexity is difficult to determine, without using a significant amount of advanced mathematics, including quite a bit of probability. This type of mathematical work is beyond the scope of this course, so we will not develop the <em>n/2</em> answer here. However, intuitively, the <em>n/2</em> answer makes sense: on average, we would expect to have to go through about one-half of the array before we find our key value. Due to the difficulty of determining average-case time complexity without digging into some deeper mathematics, we will not worry about average-case complexity from here on out.</p>
+<p>When the algorithm takes the same amount of time regardless of the input contents, we express every-case time complexity as the function T(n). For the algorithm to count the number of even values in an array, the <code>pArr[i] % 2 == 0</code> fundamental operation is executed</p>
+<p><img src="https://doane.instructure.com/files/961798/download?download_frd=1" alt="Count-evens time complexity" title="Count-evens time complexity"/></p>
+<h4 id="time-complexity-functions-are-usually-uglier-than-that">Time complexity functions are usually uglier than that</h4>
+<p>The linear search and count-evens algorithms were chosen specifically for introducing the idea of time complexity functions. Generally speaking, calculating time complexity functions is more difficult than these two examples might imply. To get a taste of the complexity in computing time complexity, consider the following Bubble Sort code, which will arrange an array of integer values into increasing order:</p>
+<pre><code>void bubbleSort(int *pArr, int n) {
+    for(int i = 0; i &lt; n - 1; i++) {
+        for(int j = 0; j &lt; n - i - 1; j++) {
+            if(pArr[j] &gt; pArr[j + 1]) {
+                std::swap(pArr[j], pArr[j+1]);
+            }
+        }
+    }
+}
+
+</code></pre>
+<p>Bubble Sort got its name for the way larger elements are &quot;bubbled&quot; to the right side of the array with each succeeding pass. The details of the sort are not what we're really interested in here, though. Rather, we want to look at the time complexity of the algorithm. We will use the Boolean condition in the if statement, <code>pArr[j] &gt; pArr[j + 1]</code>, as our fundamental operation.</p>
+<p>First, we should note that this is an every-case situation; there is nothing in the code that exits the loops early. Second, note that we have two <em>nested</em> loops, where each loop depends on the value of <code>n</code>. We can count how many times the fundamental operation happens for each iteration of the outer loop, like this:</p>
+<table>
+<thead>
+<tr class="header">
+<th><code>i</code></th>
+<th><code>j</code> values</th>
+<th># f.o.'s</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td>0, 1, 2, ..., n - 2</td>
+<td>n - 1</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>0, 1, 2, ..., n - 3</td>
+<td>n - 2</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td>0, 1, 2, ..., n - 4</td>
+<td>n - 3</td>
+</tr>
+<tr class="even">
+<td>...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr class="odd">
+<td>n - 2</td>
+<td>0</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p>Now, &quot;all&quot; we need to do is add up all of the fundamental operations in the third column. We can use a mathematical identity from the field of combinatorics (the mathematics of counting), and some simple algebra, to see that</p>
+<p><img src="https://doane.instructure.com/files/961874/download?download_frd=1" alt="Bubble sort time complexity" title="Bubble sort time complexity"/></p>
+<p>Our every-case time complexity for Bubble Sort is on the order of <em>n<sup>2</sup></em>.</p>
+<p>The more complicated our algorithms become, the more difficult it is to get exact time complexity functions. Luckily, there are some shortcuts we can use to know time complexity without having to do the math.</p>
+<p>Algorithms that have non-nested loops depending on the input size, will have every-case or worst-case time complexity on the order of <em>n</em>. Algorithms that have two nested loops, each depending on the input size, will have every-case or worst-case time complexity on the order of <em>n<sup>2</sup></em>.</p>
+<p>An extra wrinkle that can complicate our thinking is &quot;hidden&quot; time complexity. Consider again the <code>SLL</code> movie code from the previous module:</p>
+<pre><code>SLL&lt;Movie&gt; findKeywordMatches(const SLL&lt;Movie&gt; &amp;movies, std::string keyword) {
+    SLL&lt;Movie&gt; matches;
+
+
+    for(size_t i = 0; i &lt; movies.size(); i++) {
+        Movie m = movies.get(i);
+        if(m == keyword) {
+            matches.add(m);
+        }
+    }
+
+
+    return matches;
+}</code></pre>
+<p>On first glance, this looks like it would run with time complexity on the order of <em>n</em>, since there is a single loop that depends on the input size. However, we know that the <code>get</code> method involves a for loop, that in the worst case, has to iterate through all of the elements in the list. So, in fact, this algorithm takes on the order of <em>n<sup>2</sup></em> time.</p>
+<h4 id="asymptotic-notation">Asymptotic notation</h4>
+<p>You may have noticed that we have been using the phrase &quot;on the order of&quot; when talking about time complexities. When we work with time complexity, we want to focus on the parts that matter the most, while ignoring small details that might get in the way of our understanding. We do this with <em>order notation</em>, in particular <em>Big-O</em> notation.</p>
+<p>Given a time complexity function, we apply Big-O notation by finding the fastest growing term in the function, and ignoring all other terms, including constants. For example, here are the Big-O notations for a variety of time complexities from this module:</p>
+<p><img src="https://doane.instructure.com/files/961883/download?download_frd=1" alt="Big-O time complexities" title="Big-O time complexities"/></p>
+<p>The <em>∈</em> symbol is a set membership sign, read mathematically as &quot;is a member of,&quot; or in our situation, as &quot;is.&quot; We use this rather than the equals sign because an entry like <em>O(n)</em> is a set of functions rather than one function. For an every-case time complexity <em>T(n)</em>, we read an entry like</p>
+<p><img src="https://doane.instructure.com/files/961925/download?download_frd=1" alt="T(n) is Big-O of n squared" title="T(n) is Big-O of n squared" /></p>
+<p>as &quot;T of n is Big-O of n squared.&quot;</p>
+<p>By focusing on the fastest growing term in a time complexity function, we see what really matters, without getting bogged down in small details. Here are some more examples of applying Big-O notation to a variety of functions:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Function</th>
+<th>Big-O</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><em>f(n) = 13245</em></td>
+<td><em>∈ O(1)</em></td>
+</tr>
+<tr class="even">
+<td><em>f(n) = 13000n - 109</em></td>
+<td><em>∈ O(n)</em></td>
+</tr>
+<tr class="odd">
+<td><em>f(n) = n<sup>2</sup> + 13n - 10000</em></td>
+<td><em>∈ O(n<sup>2</sup>)</em></td>
+</tr>
+<tr class="even">
+<td><em>f(n) = 13n<sup>2</sup> - 20n + 10</em></td>
+<td><em>∈ O(n<sup>2</sup>)</em></td>
+</tr>
+<tr class="odd">
+<td><em>f(n) = n<sup>3</sup> - 20n<sup>2</sup> - 100</em></td>
+<td><em>∈ O(n<sup>3</sup>)</em></td>
+</tr>
+</tbody>
+</table>
+<p>Remember our notion of applying Big-O: focus on the fastest growing term in the function, and ignore everything else, including constants.</p>
+<h3 id="categorizing-algorithms-by-complexity">Categorizing algorithms by complexity</h3>
+<p>Previously we have seen that we can use Big-O notation to simplify time complexity functions. Another benefit of using Big-O is that with it, we can classify algorithms by their complexities. For example, the linear search algorithm in the worst case, and the count-evens algorithm in every case, are <em>linear</em> algorithms, that is, <em>∈ O(n)</em>. Many simple sorting algorithms, such as the Bubble Sort, Insertion Sort, and Selection Sort, are all <em>quadratic</em> algorithms, <em>∈ O(n<sup>2</sup>)</em>. More sophisticated sorting algorithms, such as Heap Sort, Merge Sort, and Quick Sort, are <em>linear-logarithmic</em> algorithms, <em>∈ O(n log<sub>2</sub> n)</em>. We generally consider quadratic algorithms to be the slowest algorithms we're willing to tolerate, especially for large sizes of <em>n</em>.</p>
+<p>The following table lists a variety of Big-O time-complexity categories, from fastest to slowest. A facetious, but accurate, third column gives you a way to remember each category.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Big-O set</th>
+<th>Name</th>
+<th>Facetious Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>O(1)</td>
+<td>Constant time</td>
+<td>Oh, yeah</td>
+</tr>
+<tr class="even">
+<td>O(log n)</td>
+<td>Logarithmic time</td>
+<td>Oh, nice</td>
+</tr>
+<tr class="odd">
+<td>O(n)</td>
+<td>Linear time</td>
+<td>Oh, OK</td>
+</tr>
+<tr class="even">
+<td>O( n<sup>2</sup> )</td>
+<td>Quadratic time</td>
+<td>Oh, my</td>
+</tr>
+<tr class="odd">
+<td>O( 2<sup>n</sup> )</td>
+<td>Exponential time</td>
+<td>Oh, no</td>
+</tr>
+<tr class="even">
+<td>O(n!)</td>
+<td>Factorial time</td>
+<td>OMG</td>
+</tr>
+</tbody>
+</table>
+<h3 id="sample-application-evaluating-prng-quality">Sample application: evaluating PRNG quality</h3>
+<p>In the sample application for this module, we will perform a simple quality test on three <em>pseudo-random number generators</em> (PRNGs). As programmers, we use PRNGs in a variety of applications, from generating test data to gaming and simulations. If we are using code simulations as part of scientific research, or for cryptographic purposes, it is important that the PRNG we use is of high quality, that is, produces a sequence of values that appears to be random.</p>
+<p>There are many, many such tests. For this demo, we will use the <em>monobit</em> test from the (NIST Statistical PRNG Test Suite)[https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-22r1a.pdf]. This test takes a large number of pseudo-randomly generated values, and this is where our <code>IteratorSLL</code> class comes in. We will use one of these lists as a container to hold a large number of pseudo-randomly generated integers, provided as input to the monobit test. The fact that the list has iterators allows the monobit test code to efficiently move through the list, in linear time, to perform its work.</p>
+<p>This application tests three PRNGs, of varying quality:</p>
+<dl>
+<dt>RANDU</dt>
+<dd><a href="https://en.wikipedia.org/wiki/RANDU">RANDU</a> is a tragically flawed generator that shipped on IBM mainframe computers in the 1960s and early 1970s.
+</dd>
+<dt>minstd_rand0</dt>
+<dd><a href="https://en.cppreference.com/w/cpp/numeric/random">minstd_rand0</a> is a &quot;Minimum standard&quot; generator, created by Lewis, Goodman and Miller in 1969.
+</dd>
+<dt>mt19337_64</dt>
+<dd><a href="https://en.cppreference.com/w/cpp/numeric/random">mt19937_64</a> is a high-quality, 64-bit &quot;Mersenne Twister&quot; generator, created by Matsumoto and Nishimura in 2000.
+</dd>
+</dl>
+<p>First, let's examine the monobit test code:</p>
+<pre><code>double monobit(const IteratorSLL&lt;int&gt; &amp;numbers) {
+    double S = 0.0;
+
+
+    // iterate through all values
+    IteratorSLL&lt;int&gt;::Iterator i = numbers.front();
+    while(i != numbers.end()) {
+        // assuming 32-bit integers here
+        unsigned mask = 0x00000001;
+
+
+        // sum up zeroes / ones according to the NIST monobit test
+        for(int j = 0; j &lt; 32; j++) {
+            int v = *i;
+            S += (v &amp; mask) == 0x00000000 ? -1.0 : 1.0;
+            mask &lt;&lt;= 1;
+        }
+        i++;
+    }
+
+
+    // compute P-value according to the NIST monobit test
+    double stat = abs(S) / sqrt(numbers.size() * 32.0);
+    double PValue = erfc(stat / sqrt(2.0));
+
+
+    return PValue;
+}</code></pre>
+<p>The parameter to the function is a reference to the linked list containing the pseudo-random numbers to be evaluated. The code iterates through all the values, and performs a kind of running sum on the number of zeroes and ones seen in the binary expressions of the integers in the list. Every zero encountered adds -1 to the sum, while every one adds 1 to the sum. After the sum is calculated, a probability (P-value) is calculated and returned, representing the confidence level that the numbers appear to be random. A return value less than 0.01 means that the numbers in the list appear to be non-random.</p>
+<p>The main program populates a singly-linked list with each of the generators listed above, then executes the monobit test on the list. Here is the section that tests the Mersenne Twister PRNG:</p>
+<pre><code>// test the Mersenne Twister PRNG
+for(int i = 0; i &lt; n; i++) {
+    int v = dist(mtPRNG);
+    randInts.add(v);
+}
+double PValue = monobit(randInts);
+std::cout &lt;&lt; &quot;Mersenne Twister monobit: &quot; &lt;&lt; PValue &lt;&lt; std::endl;</code></pre>
+<p>A block very much like this is included for each of the three generators.</p>
+<p>When executed, we find that the minimum standard PRNG and the Mersenne Twister provide acceptable results, while RANDU is disastrously bad:</p>
+<pre><code>Mersenne Twister monobit: 0.918164
+Minimum standard monobit: 0.397357
+RANDU monobit: 0</code></pre>
+<p>Of course, when you run the code, your numbers will vary, due to the very nature of pseudo-random number generation.</p>
+</body>
+</html>

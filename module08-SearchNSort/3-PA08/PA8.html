@@ -1,0 +1,62 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h2 id="breaking-the-speed-limit">Breaking the speed limit</h2>
+<p>In this assignment, you will implement a sorting algorithm that can sort faster than the general <em>O(n lg n)</em> speed limit normally associated with sorting algorithms. Here, we will take advantage of specific characteristics of the data in order to improve performance, with a <em>Bucket Sort</em> algorithm. We assume that we are sorting floating point numbers in the half-open range <em>[0, 1)</em>, and use a probably counterintuitive algorithm to break the speed limit.</p>
+<p>Here is an example. Suppose we are sorting an array containing 20 floating point numbers, like this:</p>
+<pre><code>[0.07, 0.90, 0.88, 0.45, 0.92, 0.13, 0.45, 0.61, 0.67, 0.87, 0.04, 0.23, 0.49, 0.08, 0.74, 0.76, 0.58, 0.63, 0.32, 0.75]</code></pre>
+<p>We will distribute these values into 10 &quot;buckets&quot;, which are smaller arrays or lists. Bucket zero holds values in <em>[0, 0.1)</em>, bucket one holds values in <em>[0.1, 0.2)</em>, bucket two holds values in <em>[0.2, 3)</em>, and so on. For this data, our buckets would look like this:</p>
+<p><img src="https://doane.instructure.com/files/990146/download?download_frd=1" alt="Numbers placed into buckets" title="Numbers placed into buckets"/></p>
+<p>Once the values have been distributed, we use an efficient sorting algorithm to sort the values in each bucket. Then, we copy all of the values from bucket zero into the original array, followed by all the values from bucket one, then all the values from bucket two, and so on.</p>
+<p>The time complexity of bucket sort is <em>O(n + k)</em>, where <em>n</em> is the size of the array, and <em>k</em> is the number of buckets.</p>
+<p>Once you have successfully implemented the sort, execute the program with a command like this:</p>
+<pre><code>./PA08 24</code></pre>
+<p>The program in <code>PA08.cpp</code> will run your bucket sort and our quicksort algorithm for multiple tries, on arrays ranging in size from 256 to 2<sup>n</sup>, where n is the command-line parameter. The command shown caps array size at 2<sup>24</sup> = 16,777,216. Your output should look something like this:</p>
+<pre><code>       n,          bs,          qs
+     256, 9.59000E+03, 1.57000E+04
+     512, 1.22000E+04, 3.13900E+04
+    1024, 2.81600E+04, 6.83200E+04
+    2048, 6.59400E+04, 1.53300E+05
+    4096, 1.55220E+05, 3.37940E+05
+    8192, 4.00620E+05, 7.31860E+05
+   16384, 8.31300E+05, 1.59536E+06
+   32768, 1.91067E+06, 3.37719E+06
+   65536, 4.24669E+06, 7.25071E+06
+  131072, 9.21209E+06, 1.49074E+07
+  262144, 1.96070E+07, 3.19344E+07
+  524288, 4.24025E+07, 6.73938E+07
+ 1048576, 9.05547E+07, 1.41614E+08
+ 2097152, 1.91785E+08, 2.98944E+08
+ 4194304, 4.24054E+08, 6.19485E+08
+ 8388608, 8.69273E+08, 1.27820E+09
+16777216, 1.83088E+09, 2.75148E+09</code></pre>
+<p>In particular, your bucket sort column should show that your algorithm is faster than the quicksort!</p>
+<h3 id="files-in-the-directory">Files in the directory</h3>
+<p><code>BSTests.cpp</code> : phantom main program file for making the <code>BSTests</code> unit test application.</p>
+<p><code>BucketSort.hpp</code> : file containing the skeleton Bucket Sort code. This is the file you should modify.</p>
+<p><code>makefile</code> : makefile for building the unit test and demo apps. <code>PA08.cpp</code> : main application that will compare the performance of the Bucket Sort against quicksort. Once built, the usage will be <code>./PA08 n</code>, where <em>n</em> is the maximum power of two for test arrays. A value of <em>n = 24</em> works well.</p>
+<h3 id="instructions">Instructions</h3>
+<ol style="list-style-type: decimal">
+<li><p>Edit <code>BucketSort.hpp</code> and search for the <code>TODO</code> comments. Complete the following tasks:</p>
+<ol style="list-style-type: lower-alpha">
+<li><p>Using the <code>push_back</code> and <code>reserve</code> method calls, add ten <code>vector&lt;double&gt;</code> objects to the buckets vector, and reserve slightly more than <em>n / 10</em> space in each.</p></li>
+<li><p>Add all of the elements from the array <code>pArr</code> to the appropriate buckets.</p></li>
+<li><p>Use the <code>std::sort</code> function to sort the elements in each bucket.</p></li>
+<li><p>Copy all of the elements from the buckets back into the array <code>pArr</code>.</p></li>
+<li><p>Build the project and execute the <code>BSTests</code> unit tests. Make sure they all pass.</p></li>
+<li><p>Execute the <code>PA08</code> demo app to verify that the Bucket Sort works, and that it is faster than the quicksort.</p></li>
+</ol></li>
+<li><p>Before submitting your code, execute the <code>make clean</code> command to remove the executables and any object files.</p></li>
+<li><p>Once the unit tests pass and the application produces the expected results, zip the entire <code>3-PA8</code> directory and submit the resulting .zip file via this assignment.</p></li>
+</ol>
+<h3 id="grading">Grading</h3>
+<p>You will receive one point for the assignment if all the Pass criteria in the attached rubric are met; otherwise, you will receive zero points for the assignment.</p>
+</body>
+</html>

@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Module 1 Reading</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Module 1 Reading</h1>
+</header>
+<h2 id="module-1-c-introduction">Module 1: C++ Introduction</h2>
+<p>Welcome to Module 1! In this module we will cover some introductory information about the C++ programming language, in preparation for working with data structures in the next module.</p>
+<h3 id="what-we-assume-you-know">What we assume you know</h3>
+<p>In this course, we are operating on the assumption that you have taken our first two programming courses, <em>IST 145 Introduction to Programming and Problem-Solving</em>, using the Python programming language, and <em>IST 146 Programming and Problem-Solving II</em> using the Java programming language, or have equivalent experience. The remainder of this course assumes you have this Python and Java programming knowledge.</p>
+<p>In particular, you should be very comfortable with the following concepts:</p>
+<ul>
+<li>Data types (integers, floats, strings, etc.) and operations on them (mathematics, string operations, Boolean operations, logical relations, etc.)</li>
+<li>Selection (if and switch statements)</li>
+<li>Iteration (for and while loops)</li>
+<li>Linear data structures (arrays or lists)</li>
+<li>Basic Object-Oriented Programming concepts (classes, methods, fields)</li>
+</ul>
+<p>In addition, you should have introductory knowledge of the following concepts:</p>
+<ul>
+<li>Intermediate Object-Oriented Programming concepts (inheritance, polymorphism, interfaces)</li>
+<li>Exception handling to create code that “fails gracefully”</li>
+<li>The divide and conquer problem-solving technique, and recursive programming</li>
+<li>Characteristics and basic use of data structures such as lists, queues, stacks, sets, and maps</li>
+</ul>
+<h3 id="what-we-assume-you-have">What we assume you have</h3>
+<p>To build and execute the code samples and assignments in this course, you will need an ISO/IEC 14882-compliant C++ 11 compiler. In the course videos, we will use a Windows PC with an Ubuntu Windows Subsystem for Linux (WSL) environment enabled, and our IDE will be Visual Studio Code. You may use a similar environment. Another option is <a href="https://replit.com/">replit</a>, the online, browser-based IDE.</p>
+<p>You may wish to use a more fully-developed IDE such as Visual Studio on Windows, or xCode on MacOS. This will require you to create projects, configure the unit testing directories, and so on. You are on your own here!</p>
+<p>You will also need to clone the course’s git repository, which contains all of the source code we will be using. In a bash environment, you can do this by executing the following command:</p>
+<pre><code>git clone https://github.com/mmeysenburg/ist246</code></pre>
+<h3 id="differences-between-java-and-c">Differences between Java and C++</h3>
+<p><strong>[For this section of the reading, refer to the sample code in the module01-Intro/1-AirlinePassenger directory of the course’s git code repository]</strong></p>
+<p>Since Java and C++ share a common ancestor (the C programming language), you will find that much of the basic syntax between the two languages is the same or at least very similar. The following programming constructs are the same or very nearly the same in C++ as they were in Java:</p>
+<ul>
+<li>Declaration and use of primitive variables</li>
+<li>Basic control structures: <code>if</code>, <code>switch</code>, <code>for</code>, <code>while</code></li>
+<li>Block structure is indicated with <code>{ }</code></li>
+<li>Function / method syntax</li>
+</ul>
+<p>However, there are some differences between Java and C++ that we will encounter. Some of these differences are summarized below.</p>
+<h4 id="object-oriented-programming-differences">Object-oriented programming differences</h4>
+<p>C++ supports object-oriented programming, but the use of classes and objects is not required in a C++ program. In Java, there must be at least one class, but not so in C++. In C++ programs, it is not unusual to have a mixture of object-oriented concepts and structured programming concepts. In this course, we will define each of our data structures as a class, while our main programs will not be object-oriented.</p>
+<p>C++ allows generic data structures, that is, data structures that can hold any type of data, through template classes. These are not classes in themselves, but instructions to the compiler on how to write a class, given a data type specified by the user of the template. Each of the data structures we examine in this course will be written as a template class.</p>
+<p>Java only supports inheritance from one superclass, but allows for something like multiple inheritance through interfaces. C++ supports true multiple inheritance.</p>
+<p>It is occasionally useful to allow certain functions or classes outside of a class we are designing to be able to directly access our class’ private data and / or methods. C++ allows this via the <code>friend</code> keyword, which indicates that our class trusts the specified function or classes to responsibly access its private data.</p>
+<h4 id="separation-of-interface-and-implementation">Separation of interface and implementation</h4>
+<p>When we write a class in Python or Java, all of the code related to the class is in the same syntactic unit. For example, a class representing an airline passenger in Java would likely be found in a file named <code>AirlinePassenger.java</code>, such as this:</p>
+<pre><code>public class AirlinePassenger {
+    private String flightNumber;
+    private String name;
+    private String seat;
+    private int mealPreferenceCode;
+ 
+    public AirlinePassenger(String flightNumber, String name, String seat, 
+        int mealPreferenceCode) {
+        
+        this.flightNumber = flightNumber;
+        this.name = name;
+        this.seat = seat;
+        this.mealPreferenceCode = mealPreferenceCode;
+    }
+ 
+    // ... and more
+}</code></pre>
+<p>C++ may have separate code files for the declaration and implementation of a class. So, for an airline passenger class, we might have the declaration of the class in a file named <code>AirlinePassenger.h</code>, like this:</p>
+<pre><code>#pragma once
+ 
+#include &lt;string&gt; 
+ 
+class AirlinePassenger {
+private:
+    std::string flightNumber;
+    std::string name;
+    std::string seat;
+    int mealPreferenceCode;
+ 
+public:
+    AirlinePassenger(std::string fn, std::string n, std::string s, int mpc);
+ 
+    // ... and more
+};</code></pre>
+<p>(An aside: what’s up with the <code>std::</code> prefix on the string class name? The two colons (<code>::</code>) represent the <em>scope resolution</em> operator in C++. Here, they mean that the string class belongs to the standard namespace. Namespaces in C++ are something like packages in Java. They help organize code into logical groupings, and help to reduce problems with multiply-defined names. There are ways to make use of the <code>std::</code> prefix unnecessary, but we will follow the practice of using this scope resolution operator throughout our code in the course.)</p>
+<p>The implementation of the various methods in the class might be stored in a separate file, perhaps <code>AirlinePassenger.cpp</code>:</p>
+<pre><code>#include &quot;AirlinePassenger.h&quot;
+ 
+AirlinePassenger::AirlinePassenger(std::string fn, std::string n, 
+    std::string s, int mpc) : flightNumber(fn), name(n), seat(s), 
+    mealPreferenceCode(mpc) {
+ 
+}
+ 
+// ... and more</code></pre>
+<p>In this course, we will place the declaration and implementation of each of our template data structures in its own header file, ending with a <code>.hpp</code> extension. Our main code will be placed in files ending with <code>.cpp</code> extensions. Code for non-templated, non-data-structure classes may be split into a <code>.h</code> file and a <code>.cpp</code> file.</p>
+<h4 id="pointers-and-references">Pointers and references</h4>
+<p>In Java, every object is accessed via a reference, which is a variable that holds the address of the object’s location in memory. Every object in Java is dynamically allocated, usually with the <code>new</code> keyword, and accessed through a reference variable. The fields and methods of the object are accessed via the dot operator, e.g., <code>list.size()</code> gets the number of elements in a <code>List</code> object named <code>list</code>.</p>
+<p>On the other hand, primitive data types in Java, such as integers, are stored in variables that contain the value of the variable itself. They are not allocated with <code>new</code>, i.e., they are statically allocated.</p>
+<p>In C++, things are more complicated. We may have statically-allocated, local variables that are objects, rather than the addresses of objects. For example, consider this instance of airline passenger object:</p>
+<pre><code>AirlinePassenger ap(&quot;UAL1345&quot;, &quot;Jane Smith&quot;, &quot;32A&quot;, 1); </code></pre>
+<p>The fields and methods of this object could be accessed via the dot operator, as in Java. So, if the class included a <code>setSeat()</code> method, we could change Jane’s seat assignment with this method call:</p>
+<pre><code>ap.setSeat(&quot;1B&quot;);</code></pre>
+<p>If the proper function overloads have been written (a topic we will explore later in the course), we could print out the details of this passenger like this:</p>
+<pre><code>std::cout &lt;&lt; ap &lt;&lt; std::endl;</code></pre>
+<p>(In C++, we can print to the console using the <code>std::cout</code> object, and the stream insertion operator, <code>&lt;&lt;</code>. The <code>std::endl</code> object represents an endline character. )</p>
+<p>For this object, for example, we might see the following output:</p>
+<pre><code>Flight: UAL1345
+Passenger: Jane Smith
+Seat: 1B
+Meal preference code: 1</code></pre>
+<p>C++ has two ways to refer to primitives or objects via their addresses: <em>pointers</em> and <em>references</em>. Pointers are variables that hold the addresses of elements in memory, and they are used extensively in dynamic memory allocation. A dynamically-allocated instance of an airline passenger might be created like this:</p>
+<pre><code>AirlinePassenger *pAp = new AirlinePassenger(&quot;SWA5462&quot;, &quot;James Johnson&quot;, &quot;25C&quot;, 2);</code></pre>
+<p>The asterisk in this usage indicates that the variable <code>pAp</code> is a pointer. Our naming convention will put a prefix of ‘p’ at the front of pointer variable names, although this is not required. Via a pointer, the fields and methods of an object are accessed via the arrow operator, -&gt;, like this:</p>
+<pre><code>pAp-&gt;setSeat(&quot;25C&quot;);</code></pre>
+<p>To output this object via the pointer, we need to <em>dereference</em> it via another use of the asterisk, like this:</p>
+<pre><code>std::cout &lt;&lt; *pAp &lt;&lt; std::endl;</code></pre>
+<p>This time, we might see output like this:</p>
+<pre><code>Flight: SWA5462
+Passenger: James Johnson
+Seat: 25A
+Meal preference code: 2</code></pre>
+<p>C++ references are <em>aliases</em>, i.e., additional names, for existing objects, and they work more or less like references in Java do. For example, this code</p>
+<pre><code>AirlinePassenger &amp;apr = ap;</code></pre>
+<p>creates the reference <code>apr</code>, which is another name for the object named <code>ap</code>. The <code>&amp;</code> symbol in the declaration indicates that this is a reference, rather than a statically-allocated airline passenger object. Via references, object fields and methods are accessed via the dot operator, such as:</p>
+<pre><code>apr.setSeat(&quot;13D&quot;);</code></pre>
+<p>Note that, since <code>ap</code> and <code>apr</code> are both names for the same object, printing either <code>ap</code> or <code>apr</code> would result in the same output:</p>
+<pre><code>Flight: UAL1345
+Passenger: Jane Smith
+Seat: 13D
+Meal preference code: 1</code></pre>
+<p>We will frequently use references in pass-by-reference parameter passing, to prevent unnecessary copying of large objects when a method is called.</p>
+<h4 id="memory-management">Memory management</h4>
+<p>A MAJOR difference between C++ and Python or Java is that In C++ we must do our own memory management. Python and Java have runtime environments that periodically run garbage collectors to clean up objects created with the <code>new</code> keyword that are no longer in use. Not so with C++.</p>
+<p>In C++, we must put away our own toys. When we are done with an object, we need to tell the computer’s operating system that the object’s memory may be reused for another purpose. If we fail to do this, we eventually will have a large amount of the computer’s memory erroneously marked as “in use,” leading to programs that run slowly or crash entirely. This is called a <em>memory leak</em>.</p>
+<p>A good rule of thumb is that we must have a <code>delete</code> for every <code>new</code> called in our program. For example, when we are done with the James Johnson airline passenger we allocated above with the <code>new</code> keyword, we should free the memory used by the object, like this:</p>
+<pre><code>delete pAp;</code></pre>
+<h4 id="programming-safely">Programming safely</h4>
+<p><strong>[For this section of the reading, refer to the sample code in the module01-Intro/2-BadThings directory of the course’s git code repository]</strong></p>
+<p>Java was designed from the outset to be able to detect runtime errors and recover from them to keep running, or “fail gracefully,” by providing specific details on exactly what went wrong. C++, generally speaking, will do what you tell it to, even if what you tell it to do is a really bad idea. This will be manifest in two ways in this course.</p>
+<p>First, C++ does not automatically check array bounds. To illustrate this, let’s consider this short Java program. It creates an array of integers, then intentionally tries to write to an array element that does not exist, i.e., it tries to change some memory that is not part of the array. The problematic code is in the second for loop: <code>i &lt;= 100000</code>.</p>
+<pre><code>import java.util.Random;
+ 
+public class ArrayBounds {
+    public static void main(String[] args) {
+        // random number generator
+        Random prng = new Random();
+ 
+        // make an array with 100000 elements, fill with 1&#39;s
+        int[] arr = new int[100000];
+        for(int i = 0; i &lt; 100000; i++) {
+            arr[i] = 1;
+        }
+ 
+        // overwrite the array values
+        for(int i = 0; i &lt;= 100000; i++) {
+            arr[i] = prng.nextInt();
+ 
+            // every so often report how we&#39;re doing
+            if(i % 10000 == 0) {
+                System.out.println(&quot;Overwriting element &quot; + i);
+            }
+        }
+    }
+}</code></pre>
+<p>The output of the program is:</p>
+<pre><code>Overwriting element 0
+Overwriting element 10000
+Overwriting element 20000
+Overwriting element 30000
+Overwriting element 40000
+Overwriting element 50000
+Overwriting element 60000
+Overwriting element 70000
+Overwriting element 80000
+Overwriting element 90000
+Exception in thread &quot;main&quot; java.lang.ArrayIndexOutOfBoundsException: 100000
+        at ArrayBounds.main(ArrayBounds.java:16)</code></pre>
+<p>As soon as the program tries to write to array element 100000 – one past the end of the array – the Java runtime stops the program, and it reports what went wrong (<code>java.lang.ArrayIndexOutOfBoundsException</code>) and where the problem happened (line 16). A maintenance programmer could use that information to go directly to the point where the error occurred.</p>
+<p>Now consider a similar program in C++:</p>
+<pre><code>#include &lt;cstdlib&gt;
+#include &lt;ctime&gt;
+#include &lt;iostream&gt;
+#include &lt;random&gt;
+ 
+int main() {
+    // random number generator 
+    std::mt19937 prng(time(0));
+    std::uniform_int_distribution&lt;int&gt; dist(0, RAND_MAX);
+ 
+    // make an array with 100000 elements, fill with 1&#39;s
+    int *pArr = new int[100000];
+    for(int i = 0; i &lt; 100000; i++) {
+        pArr[i] = 1;
+    }
+ 
+    // overwrite the array values
+    for(int i = 0; i &lt;= 100000; i++) {
+        pArr[i] = dist(prng);
+ 
+        // every so often report how we&#39;re doing
+        if(i % 10000 == 0) {
+            std::cout &lt;&lt; &quot;Overwriting element &quot; &lt;&lt; i &lt;&lt; std::endl;
+        }
+    }
+ 
+    // free memory used by the array
+    delete [] pArr;
+ 
+    return EXIT_SUCCESS;
+}</code></pre>
+<p>The output of this code is:</p>
+<pre><code>Overwriting element 0
+Overwriting element 10000
+Overwriting element 20000
+Overwriting element 30000
+Overwriting element 40000
+Overwriting element 50000
+Overwriting element 60000
+Overwriting element 70000
+Overwriting element 80000
+Overwriting element 90000
+Overwriting element 100000</code></pre>
+<p>Notice the difference here! The error does NOT cause the program to crash, and thus we have no idea that something bad has occurred. But we know for sure that the program wrote over a location it should not have! The specific behavior will vary depending on the platform and compiler used to build the executable, but the end lesson is the same: C++ will let you read/write past the end of an array, and may not tell you when this error happens.</p>
+<p>Second, C++ will allow parameter mismatches much more readily than other languages. Consider this sample Java program:</p>
+<pre><code>public class ParamCheck {
+    private static void foo(int x) {
+        System.out.println(&quot;Foo says: You sent me: &quot; + x);
+    }
+ 
+    public static void main(String[] args) {
+        foo(13);
+        foo(13.13);
+    }
+}</code></pre>
+<p>If we try to compile this code, we get a syntax error message, similar to this:</p>
+<pre><code>ParamCheck.java:8: error: incompatible types: possible lossy conversion from double to int
+        foo(13.13);</code></pre>
+<p>What about a similar C++ program?</p>
+<pre><code>#include &lt;cstdlib&gt;
+#include &lt;iostream&gt;
+ 
+void foo(int x) {
+    std::cout &lt;&lt; &quot;Foo says: You sent me: &quot; &lt;&lt; x &lt;&lt; std::endl;
+}
+ 
+int main() {
+    foo(13);
+    foo(13.13);
+ 
+    return EXIT_SUCCESS;
+}</code></pre>
+<p>Compiling this program works just fine - no errors, no warnings. Worse, when we execute the program, we get this output:</p>
+<pre><code>Foo says: You sent me: 13
+Foo says: You sent me: 13</code></pre>
+<p>The program silently converts the double value 13.13 into an integer value, 13, and executes the function. So, when writing C++ code, we need to have extra vigilance about the types of our variables and parameters, to make sure that they match (or at least that any automatic conversions that the program makes are acceptable).</p>
+<h3 id="more-c-details">More C++ details</h3>
+<p>Now that we’ve looked at some of the key differences between C++ and Java, let’s add some more detail to our understanding of C++. First, we examine the primitive types available in the language.</p>
+<h4 id="primitive-types-and-constants">Primitive types and constants</h4>
+<p><strong>[For this section of the reading, refer to the sample code in the module01-Intro/3-Primitives directory of the course’s git code repository]</strong></p>
+<p>The primitive types available in C++ are similar to those in Java, with some notable exceptions. This table summarizes C++ primitives – as they are on our Windows 10 / WSL setup at the moment this material is being written.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Data type</th>
+<th>Keyword</th>
+<th>Comments</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Character</td>
+<td><code>char</code></td>
+<td>8-bit ASCII characters</td>
+</tr>
+<tr class="even">
+<td>Integer</td>
+<td><code>short</code>, <code>int</code>, <code>long</code></td>
+<td>16-, 32-, or 64-bit signed integers</td>
+</tr>
+<tr class="odd">
+<td>Unsigned integer</td>
+<td><code>unsigned short</code>, <code>unsigned</code> or <code>unsigned int</code>, <code>unsigned long</code></td>
+<td>16-, 32-, or 64-bit unsigned integers</td>
+</tr>
+<tr class="even">
+<td>Floating point</td>
+<td><code>float</code>, <code>double</code>, <code>long double</code></td>
+<td>32-, 64-, or 128-bit floating point numbers</td>
+</tr>
+<tr class="odd">
+<td>Boolean</td>
+<td><code>bool</code></td>
+<td><code>true</code> or <code>false</code></td>
+</tr>
+</tbody>
+</table>
+<p>Perhaps the most obvious difference between C++ and Java primitives is that C++ provides unsigned versions of each of the integral data types. For example, the <code>int</code> primitive can hold values in the range [-2,147,483,648, 2,147,483,647], while the <code>unsigned</code> primitive holds values in the range [0, 4,294,967,295].</p>
+<p>Secondly, unlike for Java, the sizes / ranges of primitives are not guaranteed to be consistent across platforms. In other words, it is possible that the size of an <code>int</code> – the number of bits used – is different across separate computer / operating system platforms. For example, a <code>long</code> on a PC running Windows 10 is a 64-bit integer, while in legacy code for old Windows systems or for a microcontroller, a <code>long</code> might be only 32 bits long.</p>
+<h4 id="pointers-and-arrays">Pointers and arrays</h4>
+<p><strong>[For this section of the reading, refer to the sample code in the module01-Intro/4-Arrays directory of the course’s git code repository]</strong></p>
+<p>We mentioned above that C++ supports pointers and references, both of which are in some ways similar to reference variables in Java. Pointers are crucial to programming in C++, especially when we work with data structures, which allocate their memory dynamically.</p>
+<p>Like a reference variable in Java, a pointer is a variable that contains the address of something else in memory. In C++, pointers can refer to individual primitive values, arrays of values or objects, or to individual objects.</p>
+<p>We will use three operators with pointers:</p>
+<ul>
+<li>the asterisk (<code>*</code>) is used in the declaration of a pointer variable and when we dereference a pointer, i.e., when we get the value the pointer variable refers to. In this course, we will frequently use it to declare pointers, but only occasionally to dereference a pointer</li>
+<li>the ampersand (<code>&amp;</code>) is used to declare a reference variable or parameter, but can also be used to find the address of something in memory. In this course, we will frequently use it to declare reference parameters</li>
+<li>the arrow (<code>-&gt;</code>) is also used for a kind of dereferencing, when the item at the end of the pointer is an object rather than a primitive value. We will use it frequently to access the fields and methods of dynamically-allocated objects.</li>
+</ul>
+<p>Arrays and pointers are closely related in C++. An array name is actually a pointer to the first array element (element 0). So, we often pass arrays to functions as pointers, and we will also include the size of the array as a separate parameter, since C++ arrays are not objects, and thus have no length field or size() method. To illustrate, here is the signature for a method to sum the elements of an array in Java:</p>
+<pre><code>private static int sum(int[] arr) </code></pre>
+<p>Here, the <code>int[]</code> indicates that we are passing a Java array of integers, named <code>arr</code>. We would typically pass an array to a similar C++ function like this:</p>
+<pre><code>int sum(int* pArr, int n)</code></pre>
+<p>Here, <code>int*</code> indicates that the first parameter, <code>pArr</code>, is a pointer to an integer (the first integer in the array), and the second parameter is the size of the array.</p>
+<p>Similarly, there is different syntax when allocating dynamically-allocated arrays in Java and C++. In Java, we would do something like this:</p>
+<pre><code>int[] arr = new int[100000];</code></pre>
+<p>In C++, the result of the new operator is a pointer, so we would allocate the same array like this:</p>
+<pre><code>int *pArr = new int[100000];</code></pre>
+<p>Then, since we have to manage memory ourselves in C++, when we are done with the array we should return the memory we have allocated:</p>
+<pre><code>delete [] pArr;</code></pre>
+<p>The square brackets indicate that the <code>pArr</code> pointer refers to an array, rather than a single dynamically allocated integer.</p>
+<h4 id="parameter-passing">Parameter passing</h4>
+<p><strong>[For this section of the reading, refer to the sample code in the module01-Intro/5-Parameters directory of the course’s git code repository]</strong></p>
+<p>To discuss parameter passing, it is helpful to use two terms: <em>formal parameter</em> and <em>actual parameter</em>. Consider this Java code:</p>
+<pre><code>public class Parameters {
+ 
+    private static void bar(double d) {
+        d = 13;
+        System.out.println(&quot;in bar, d = &quot; + d);
+    }
+ 
+    public static void main(String[] args) {
+        double md = 0;
+ 
+        System.out.println(&quot;before bar, md = &quot; + md);
+        bar(md);
+        System.out.println(&quot;after bar, md = &quot; + md);
+    }
+}</code></pre>
+<p>A formal parameter is the name used in a method signature to identify a parameter. In the code above, the formal parameter for the <code>bar()</code> method is <code>d</code>. An actual parameter is the value that is passed into the method. In the sample Java, the actual parameter is the value of <code>md</code>.</p>
+<p>In Java, all parameters are pass-by-value, which means that the formal parameter receives a copy of the actual parameter value. Consequently, any changes the method makes to the formal parameter have no effect on the actual parameter value, since the changes were made to a copy. If we run the preceding sample code, we see:</p>
+<pre><code>before bar, md = 0.0
+in bar, d = 13.0
+after bar, md = 0.0</code></pre>
+<p>C++ allows both pass-by-value and pass-by-reference. In pass-by-reference, the formal parameter is an alias for the actual parameter, i.e., it is simply another name for the same object. Pass by value is the default. If we want a reference parameter, we preface the formal parameter with the ampersand, <code>&amp;</code>. This example, a C++ program similar to the Java code above, shows how references parameters work:</p>
+<pre><code>#include &lt;cstdlib&gt;
+#include &lt;iostream&gt;
+ 
+void bar(double &amp;d) {
+    d = 13;
+    std::cout &lt;&lt; &quot;in bar, d = &quot; &lt;&lt; d &lt;&lt; std::endl;
+}
+ 
+int main() {
+    double md = 0;
+ 
+    std::cout &lt;&lt; &quot;before bar, md = &quot; &lt;&lt; md &lt;&lt; std::endl;
+    bar(md);
+    std::cout &lt;&lt; &quot;after bar, md = &quot; &lt;&lt; md &lt;&lt; std::endl;
+ 
+    return EXIT_SUCCESS;
+}</code></pre>
+<p>The <code>&amp;</code> marks <code>d</code> as a reference parameter. When the code runs, the formal parameter <code>d</code> will be an alias for the actual parameter <code>md</code>, and so the change made in the <code>bar()</code> function will change the value of <code>md</code>:</p>
+<pre><code>before bar, md = 0
+in bar, d = 13
+after bar, md = 13</code></pre>
+<p>We will frequently use reference parameters to pass large objects, preventing unnecessary copying from the actual parameter to the formal parameter. We will also frequently preface reference parameters with the <code>const</code> keyword, like this:</p>
+<pre><code>void foo(const double &amp;d)</code></pre>
+<p>With the formal reference parameter marked as <code>const</code>, we would get a syntax error if we attempted to place <code>d</code> on the left hand side of the assignment operator.</p>
+<h4 id="operator-overloading">Operator overloading</h4>
+<p>Like Python, but unlike Java, C++ allows us to overload operators as well as methods. This is going to be quite important as we deepen our understanding of data structures. We will frequently overload the stream insertion operator (<code>&lt;&lt;</code>) and the assignment operator (<code>=</code>) for our data structures. For example, in the <code>AirlinePassenger</code> C++ class we examined at the beginning of this reading, we overloaded stream insertion so that <code>AirlinePassenger</code> objects could be easily printed:</p>
+<pre><code>std::ostream&amp; operator&lt;&lt;(std::ostream &amp;out, const AirlinePassenger &amp;ap) {
+    out &lt;&lt; &quot;Flight: &quot; &lt;&lt; ap.flightNumber &lt;&lt; std::endl;
+    out &lt;&lt; &quot;Passenger: &quot; &lt;&lt; ap.name &lt;&lt; std::endl;
+    out &lt;&lt; &quot;Seat: &quot; &lt;&lt; ap.seat &lt;&lt; std::endl;
+    out &lt;&lt; &quot;Meal preference code: &quot; &lt;&lt; ap.mealPreferenceCode &lt;&lt; std::endl;
+    return out;
+}</code></pre>
+<p>Operator overloading is very powerful, and we should avoid caution so that we do not make an operator mean something drastically different from its usual connotation. For example, we could make <code>+</code> mean multiplication, but that would be a bad idea in practice.</p>
+<h4 id="c-classes">C++ classes</h4>
+<p><strong>[For this section of the reading, refer to the sample code in the module01-Intro/6-MonteCarlo directory of the course’s git code repository]</strong></p>
+<p>To help introduce you to writing C++ classes, we will take a top-to-bottom tour of the <code>Coordinate.hpp</code> file, which is employed in this module’s sample application. This file contains a templated class, representing a <em>(x, y)</em> coordinate on a plane.</p>
+<p>To prevent the classes we write from being defined more than one time, we place this <em>compiler directive</em> at the top of our class’ <code>.hpp</code> file (<code>Coordinate.hpp</code>, line 1):</p>
+<pre><code>#pragma once</code></pre>
+<p>After that, we have more compiler directives to include other header files that contain definitions we will need. This is similar to the <code>import</code> statements in Python or Java. Here, we include the math library and our unit-testing definitions (<code>Coordinate.hpp</code>, line 3):</p>
+<pre><code>#include &lt;cmath&gt;
+#include &lt;doctest.h&gt;</code></pre>
+<p>Line 10 of the code is the start of a Doxygen comment for the class. We will discuss Doxygen comments in the next section.</p>
+<p>Next, we have the beginning of our class declaration (<code>Coordinate.hpp</code>, line 17):</p>
+<pre><code>template &lt;class T&gt; class Coordinate</code></pre>
+<p>The <code>template</code> keyword means that this is a set of instructions on how to make a class, rather than an actual class itself. The part in angle brackets, <code>&lt;class T&gt;</code>, says that any particular class generated from this template will be parameterized with a datatype <code>T</code>. <code>T</code> will be the type used for each component in our <em>(x, y)</em> coordinate – <code>float</code>, <code>double</code>, <code>long double</code>, etc. The template is used by the compiler to generate the appropriate version of a coordinate. For example,</p>
+<pre><code>Coordinate&lt;float&gt; zeroF, dartF;</code></pre>
+<p>would create two coordinates using floats for <em>x</em> and <em>y</em>, while</p>
+<pre><code>Coordinate&lt;long double&gt; zeroLD, dartLD;</code></pre>
+<p>would create two other coordinates using long doubles.</p>
+<p>Finally, the name of the class is specified with <code>class Coordinate</code>.</p>
+<p>Rather than specifying access levels for each method and field, as in Java, in C++ we specify areas inside the class declaration to convey this information. We start a section of publicly-available methods with (<code>Coordinate.hpp</code>, line 18):</p>
+<pre><code>public:</code></pre>
+<p>Everything declared after this line will have public access, until we change with a different area access specifier. We can change back and forth between access specifiers as many times as we wish, and there is no particular order that must be followed. In this course, we will tend to have all of the public elements first in our class declaration, followed by all of the private elements.</p>
+<p>The next items of note are the default constructor (<code>Coordinate.hpp</code>, line 24):</p>
+<pre><code>Coordinate() : x(), y() { }</code></pre>
+<p>and the initializing constructor (<code>Coordinate.hpp</code>, line 34):</p>
+<pre><code>Coordinate(T inX, T inY) : x(inX), y(inY) { }</code></pre>
+<p>As is the case in Java, constructors have the same name as their class, and they have no return value. A difference in C++ is the <em>initialization list</em>, used to provide initial values to the fields of the class. In the default constructor, the initialization list <code>: x(), y()</code> sets the fields to the default values for whatever type the class is parameterized for – typically 0 for numeric types. In the initializing constructor, the initialization list <code>: x(inX), y(inY)</code> gives the fields the values provided by the formal parameters.</p>
+<p>Next in both constructors is the empty body of the constructor - <code>{ }</code>. Since the initialization lists took care of providing field values, there is nothing else for the constructors to do, and so they have empty bodies. When we have small method bodies like this, we will place them inside the class declaration. Other, longer methods will be <em>declared</em> inside the class declaration, but <em>defined</em> after the class declaration.</p>
+<p>The next items in the class declaration are the mutators and accessors. These should be familiar to you from Java. The only difference is the use of <code>T</code> to indicate the type of the formal parameters and return values. If our coordinate was parameterized with <code>float</code>, <code>T</code> would be replaced by <code>float</code>. If we parameterized with <code>long double</code>, <code>T</code> would be replaced by <code>long double</code>.</p>
+<p>The last method declaration in the public section of the class is for a method to measure the distance between this coordinate and another (<code>Coordinate.hpp</code>, line 72):</p>
+<pre><code>T distanceTo(const Coordinate&lt;T&gt; &amp;other) const;</code></pre>
+<p>Reading this declaration from left to right, we see that the method’s return type is <code>T</code>, the type used for each part of a coordinate. The name of the method is <code>distanceTo</code>. The method takes one formal parameter, a constant reference <code>Coordinate&lt;T&gt;</code> object. The final <code>const</code> on the line means that this method will not change the values of any of the object’s fields. Since this method will take more than one line to write, we end the line with a semicolon. The definition of the method will occur later in the file, after the end of the class declaration.</p>
+<p>Next, we switch to a private access specifier area (<code>Coordinate.hpp</code>, line 73):</p>
+<pre><code>private:</code></pre>
+<p>and then declare the two private fields for the class, <code>x</code> and <code>y</code>.</p>
+<p>The class declaration ends on line 83 with</p>
+<pre><code>};</code></pre>
+<p>Note the semicolon! Unlike Java, class declarations in C++ must end with a semicolon. Forgetting the semicolon here will result in a syntax error when you try to compile your code.</p>
+<p>After the class declaration, we define any of the methods that were too long to include inside the declaration. Here, there is only one method to declare (<code>Coordinate.hpp</code>, line 92):</p>
+<pre><code>template &lt;class T&gt;
+T Coordinate&lt;T&gt;::distanceTo(const Coordinate&lt;T&gt; &amp;other) const {
+    T dx = x - other.x;
+    dx = dx * dx;
+    T dy = y - other.y;
+    dy = dy * dy;
+    return sqrt(dx + dy);
+}</code></pre>
+<p>Since the class is templated, and the <code>distanceTo()</code> method was not defined inside the class declaration, we begin the function with <code>template &lt;class T&gt;</code>. The next line from left to right: <code>T</code> is the return type of the function. <code>Coordinate&lt;T&gt;::</code> means that this function belongs to the templated coordinate class. The rest of the signature is the same as it was in the class declaration. The body of the method uses the Euclidean distance formula to compute the distance between this object and the <code>Coordinate</code> referenced by the formal parameter <code>other</code>.</p>
+<p>Some other aspects of using C++ classes as data structures, such as destructors, overloading required or beneficial operators, copy constructors, and friend functions, will be covered as we move forward in the course.</p>
+<h3 id="doxygen-comments">Doxygen comments</h3>
+<p>Python has docstrings, and Java has javadoc comments, as a way to not only add comments to code but also to automatically generate documentation that appears in our IDEs or as HTML reference pages. C++ does not have a standard facility for this, but there are several choices available to us to accomplish the same thing. In this course, we will use <a href="https://www.doxygen.nl/index.html">Doxygen</a>. We will write Doxygen comments in much the same way we did javadoc. For example, consider the following Doxygen comments for the <code>distanceTo()</code> method in the <code>Coordinate</code> class (<code>Coordinate.hpp</code>, line 64):</p>
+<pre><code>/**
+ * @brief Euclidean distance method.
+ * 
+ * Calculate the Euclidean distance between this coordinate and another.
+ * 
+ * @param other Reference to the other coordinate to use.
+ * @return Euclidean distance between this coordinate and the other.
+ */</code></pre>
+<p>The <code>@brief</code> tag briefly describes the element. After a blank line in the comments, a more complete description is provided. As in javadoc, a <code>@param</code> tag is used to document each parameter, and <code>@return</code> is used to document the return type of the method. All of the data structures classes we develop through the course will be thoroughly documented with Doxygen comments. You can find the processes HTML documentation for all of the data structures in the <code>html</code> directory of the course git repository.</p>
+<h3 id="unit-tests">Unit tests</h3>
+<p>There are many different unit-testing frameworks for C++. For this course, we have chosen a simple, lightweight framework called <a href="https://github.com/onqtam/doctest">doctest</a>. The required header for using doctest is in the <code>doctest</code> directory of the course git repository, and the makefiles for each of our code samples configures the include path to find that directory. Each piece of code we want to write unit tests for should include the <code>doctest.h</code> file.</p>
+<p>One of the benefits of doctest is that we can place our unit tests in the same file that contains our source code. Our practice will be to have each doctest unit test placed directly after the method it tests. In the coordinate class, we only test the <code>distanceTo()</code> method, with the tests starting in line 102 of <code>Coordinate.h</code>:</p>
+<pre><code>TEST_CASE(&quot;testing Coordinate&lt;T&gt;::distanceTo&quot;) {
+    Coordinate&lt;float&gt; f1, f2;
+ 
+    // distance should be 0
+    CHECK(f1.distanceTo(f2) == 0.0f);
+ 
+    f1.setX(11.0f); f1.setY(11.0f);
+    f2.setX(11.0f); f2.setY(11.0f);
+    // distance should still be 0
+    CHECK(f1.distanceTo(f2) == 0.0f);
+ 
+    Coordinate&lt;double&gt; f3(0.7071068, 0.0d);
+    Coordinate&lt;double&gt; f4(0.0d, 0.7071068);
+    // distance should be 1 -- within floating point tolerance errors
+    CHECK(f3.distanceTo(f4) == doctest::Approx(1.0));
+ 
+    Coordinate&lt;long double&gt; f5(2.0L, 3.0L);
+    Coordinate&lt;long double&gt; f6(-3.0L, -2.0L);
+    // distance should be approx 7.071
+    CHECK(f5.distanceTo(f6) == doctest::Approx(7.071));
+}</code></pre>
+<p>In this unit test, we create a variety of <code>Coordinate</code> objects, parameterized with different floating point types, and then verify that the <code>distanceTo()</code> method returns the expected distance between points.</p>
+<p>If we build our code and execute the unit tests, like this,</p>
+<pre><code>make
+./CoordinateTests</code></pre>
+<p>the unit tests will execute, and if our code does what it should, we see this output:</p>
+<pre><code>[doctest] doctest version is &quot;2.4.6&quot;
+[doctest] run with &quot;--help&quot; for options
+===============================================================================
+[doctest] test cases: 1 | 1 passed | 0 failed | 0 skipped
+[doctest] assertions: 4 | 4 passed | 0 failed |
+[doctest] Status: SUCCESS!</code></pre>
+<h3 id="running-code-in-our-environment">Running code in our environment</h3>
+<p>In a bash environment, we build our code with the <code>make</code> command. Navigate with <code>cd</code> to the directory containing the code you’re interested in, then execute <code>make</code>. This will build the executable(s) for the code in that directory. If unit tests are used, the <code>make</code> command will build both the standard executable and the unit test executable. All of this is controlled by the contents of the makefile.</p>
+<p>Here are the contents of the makefile for the <code>MontePi</code> application:</p>
+<pre><code>all:    CoordinateTests MontePi
+ 
+CoordinateTests:    CoordinateTests.cpp
+    g++ -std=c++11 -Wall -I ../../doctest -DDOCTEST_CONFIG_IMPLEMENT_WITH_MAIN CoordinateTests.cpp -o CoordinateTests
+ 
+MontePi:    MontePi.cpp
+    g++ -std=c++11 -Wall -O3 -I ../../doctest -DDOCTEST_CONFIG_DISABLE MontePi.cpp -o MontePi
+ 
+clean:
+    rm CoordinateTests MontePi</code></pre>
+<p>The makefile controls the construction of two executables: <code>CoordinateTests</code> (the unit tests for the coordinate class) and <code>MontePi</code> (an application for estimating the value of 𝛑 using a Monte Carlo simulation). Here are explanations of some of the bits in the makefile:</p>
+<ul>
+<li><code>g++</code> is the name of the C++ compiler in our WSL environment</li>
+<li><code>-std=c++11</code> tells the compiler to use the C++ 11 standard, which a relatively recent, and widely used version of the language</li>
+<li><code>-Wall</code> tells the compiler to report all warnings, in addition to all syntax errors</li>
+<li><code>-I ../../doctest</code> adds the doctest unit testing directory to the compiler’s include path search</li>
+<li><code>-DDOCTEST_CONFIG_IMPLEMENT_WITH_MAIN</code> configures doctest to create a standalone unit-testing program</li>
+<li><code>-DDOCTEST_CONFIG_DISABLE</code> disables doctest, so our unit tests are not part of the “production” code</li>
+<li><code>-o</code> sets the name of the output file for the executable</li>
+</ul>
+<p>The <code>make</code> command used by itself causes both executables to be built. If we specify a target, e.g., <code>make MontePi</code>, only that target is built. <code>make clean</code> will remove the executable files.</p>
+</body>
+</html>

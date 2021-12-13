@@ -1,0 +1,38 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h2 id="reversing-a-list">Reversing a list</h2>
+<p>In this assignment, you will add a new method to our <code>DLL</code> class, <code>reverse</code>, with this signature:</p>
+<pre><code>DLL&lt;T&gt; reverse() const;</code></pre>
+<p>When called, the method creates and returns a new DLL with the same elements as the object the method was called from, but in reverse order. For example, if <code>list1</code> is a <code>DLL&lt;int&gt;</code> containing the values [9, 8, 2, 7, 3], then after the statement</p>
+<pre><code>DLL&lt;int&gt; list2 = list1.reverse();</code></pre>
+<p>the structure <code>list2</code> contains the values [3, 7, 2, 8, 9].</p>
+<p>In addition to coding the <code>reverse</code> method, you will also be asked to write a doctest unit test to test the method.</p>
+<h3 id="files-in-the-directory">Files in the directory</h3>
+<p><code>DLL.hpp</code> : a copy of the <code>DLL</code> class developed in this module. This is the file you should modify for this assignment.</p>
+<p><code>DLLTests.cpp</code> : phantom main program file for making the <code>DLLTests</code> unit test application.</p>
+<p><code>makefile</code> : makefile for building the <code>DLLTests</code> unit test application, and the <code>PA05</code> main application.</p>
+<p><code>PA05.cpp</code> : simple application to exercise the new <code>reverse</code> method.</p>
+<h3 id="instructions">Instructions</h3>
+<p><em>[Note: the code for PA05 will compile with the files as delivered, but with a warning. However, the <code>PA05</code> application will not run, and the <code>DLLTests</code> unit tests will not pass.]</em></p>
+<ol style="list-style-type: decimal">
+<li><p>Edit <code>DLL.hpp</code> and search for the <code>TODO</code> comments. Complete the following tasks:</p>
+<ol style="list-style-type: lower-alpha">
+<li><p>Complete the definition of the <code>reverse</code> method.</p></li>
+<li><p>Complete the doctest unit test for the <code>remove</code> method. The comments in the code offer you some guidance on how to test the method. Look at other doctest unit tests in the file -- they all begin with <code>TEST_CASE</code> -- for some inspiration.</p></li>
+<li><p>Built the project and execute the `DLLTests' unit tests. Make sure they all pass.</p></li>
+</ol></li>
+<li><p>Before submitting your code, execute the <code>make clean</code> command to remove the executables and any object files.</p></li>
+<li><p>Once the unit tests pass and the application produces the expected results, zip the entire <code>5-PA5</code> directory and submit the resulting .zip file via this assignment.</p></li>
+</ol>
+<h3 id="grading">Grading</h3>
+<p>You will receive one point for the assignment if all the Pass criteria in the attached rubric are met; otherwise, you will receive zero points for the assignment.</p>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h2 id="merging-with-iterators">Merging with iterators</h2>
+<p>Two lists,</p>
+<p><em>L = {L<sub>0</sub>, L<sub>1</sub>, ... , L<sub>m</sub>}</em></p>
+<p>and</p>
+<p>*M = {M<sub>0</sub>, M<sub>1</sub>, ... , M<sub>n</sub>}</p>
+<p>can be merged pairwise to produce a new list</p>
+<p><em>{M<sub>n</sub>, M<sub>n−1</sub>, M<sub>n−2</sub>, ... , M<sub>m</sub>, L<sub>m</sub>, M<sub>m−1</sub>, L<sub>m−1</sub>, ... , M<sub>1</sub>, L<sub>1</sub>, M<sub>0</sub>, L<sub>0</sub>}</em>,</p>
+<p>as long as list <em>M</em> is at least as long as list <em>L</em>, i.e., <em>n ≥ m</em>, where <em>n</em> is the size of list <em>M</em>, and <em>m</em> is the size of list <em>L</em>.</p>
+<p>For example, consider these lists:</p>
+<p><em>L: {1, 2, 3, 4}</em></p>
+<p><em>M: {-1, -2, -3, -4, -5}</em></p>
+<p><em>Merged: {-5, -4, 4, -3, 3, -2, 2, -1, 1}</em></p>
+<p>Modify the <code>IteratorSLL</code> class in the <code>4-PA04</code> directory to include a new constructor that takes two lists <code>L</code> and <code>M</code> as parameters and creates the new merged list. The new constructor should throw a <code>std::out_of_range</code> exception if the size of list <code>M</code> is not at least as large as the size of list <code>L</code>. You may use the provided unit tests and main program to test your new constructor.</p>
+<p><em>Your new constructor should use iterators to iterate through L and M.</em></p>
+<h3 id="files-in-the-directory">Files in the directory</h3>
+<p><code>IteratorSLL.hpp</code> : File containing the <code>IteratorSLL</code> class. Modify only this file -- search for the <code>TODO</code> comments.</p>
+<p><code>IteratorSLLTests.cpp</code> : phantom main program file for making the <code>IteratorSLLTests</code> unit test application.</p>
+<p><code>makefile</code> : makefile for building the <code>IteratorSLLTests</code> unit test application, and the <code>PA04</code> main application.</p>
+<p><code>PA04.cpp</code> : simple application to exercise the merging constructor, using the data from the example above.</p>
+<h3 id="instructions">Instructions</h3>
+<p><em>[Note: the code for PA04 will not compile until you declare and implement the merging constructor.]</em></p>
+<ol style="list-style-type: decimal">
+<li><p>Edit <code>IteratorSLL.hpp</code> and search for the <code>TODO</code> comments. Complete the following tasks:</p>
+<ol style="list-style-type: lower-alpha">
+<li><p>Write a Doxygen comment header for the merging constructor.</p></li>
+<li><p>Write the declaration -- just the first line -- of the merging constructor.</p></li>
+<li><p>Write the definition of the merging constructor.</p></li>
+<li><p>Built the project and execute the `IteratorSLLTests' unit tests. Make sure they all pass.</p></li>
+</ol></li>
+<li><p>Before submitting your code, execute the <code>make clean</code> command to remove the executables and any object files.</p></li>
+<li><p>Once the unit tests pass and the application produces the expected results, zip the entire <code>4-PA4</code> directory and submit the resulting .zip file via this assignment.</p></li>
+</ol>
+<h3 id="grading">Grading</h3>
+<p>You will receive one point for the assignment if all the Pass criteria in the attached rubric are met; otherwise, you will receive zero points for the assignment.</p>
+</body>
+</html>

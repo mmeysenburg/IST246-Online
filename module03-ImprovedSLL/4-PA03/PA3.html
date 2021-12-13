@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h2 id="more-overrides">More Overrides</h2>
+<p>In this assignment, you will add three more operator overrides for the <code>SLL</code> class. In particular:</p>
+<p>Override the compound addition / assignment operator (<code>+=</code>) to work with <code>SLL&lt;T&gt;</code> objects. This operator adds an item of type <code>T</code> to the front of the list. For example, if <code>list</code> is an <code>SLL</code> containing integers, and it has the items <code>[1, 3, 5, 7]</code> already in the structure, then the statement</p>
+<pre><code>list += 13;</code></pre>
+<p>would result in the list containing <code>[13, 1, 3, 5, 7]</code>.</p>
+<p>Override the compound subtraction / assignment operator (<code>-=</code>) to work with <code>SLL&lt;T&gt;</code> objects. This operator removes the first occurrence of an item from the list, if the item is in the list. For example, if <code>list</code> is an <code>SLL</code> containing double-precision floating point numbers, and it has the items <code>[1.2, 3.4, 5.6, 7.8, 9.0, 3.4]</code> already in the structure, then the statement</p>
+<pre><code>list -= 3.4;</code></pre>
+<p>would result in the list containing <code>[1.2, 5.6, 7.8, 9.0, 3.4]</code>.</p>
+<p>Override the indexing operator (<code>[ ]</code>) to work with <code>SLL&lt;T&gt;</code> objects. This operator returns a reference to the indexed element, or throws a <code>std::out_of_range</code> exception if the specified index is not legal for the list. For example, if <code>list</code> is an <code>SLL</code> containing characters, and it has the items <code>['a', 'b', 'c', 'd', 'e']</code> already in the structure, then the statement</p>
+<pre><code>std::cout &lt;&lt; list[1] &lt;&lt; std::endl;</code></pre>
+<p>would print <code>b</code> on the standard output. Note: since this operator returns a <em>reference</em> to the specified element, it can be used to change the list contents. For example, the statement</p>
+<pre><code>list[3] = &#39;Z&#39;;</code></pre>
+<p>changes the list contents to be <code>['a', 'b', 'c', 'Z', 'e']</code>.</p>
+<p>If we attempted to do <code>list[5] = 'Q';</code>, an <code>std::out_of_range</code> exception would be thrown, since 5 is not a legal index of an element in the list.</p>
+<h3 id="files-in-the-directory">Files in the directory</h3>
+<p><code>makefile</code> : makefile for building the <code>PA03Tests</code> unit test application, and the <code>PA03</code> main application.</p>
+<p><code>PA03.cpp</code> : simple application showing the workings of the three new operators.</p>
+<p><code>PA03Tests.cpp</code> : phantom main program file for making the <code>PA03Tests</code> unit test application.</p>
+<p><code>SLL.hpp</code> : copy of the singly-linked list class developed in this module. Modify this file to complete the assignment -- search for the <code>TODO</code> comments.</p>
+<h3 id="instructions">Instructions</h3>
+<p><em>[Note: the code for PA03 will not compile until you declare and implement the three overrides.]</em></p>
+<ol style="list-style-type: decimal">
+<li><p>Edit <code>SLL.hpp</code> and search for the <code>TODO</code> comments. Complete the following tasks:</p>
+<ol style="list-style-type: lower-alpha">
+<li><p>Write a Doxygen comment header for the <code>operator-=</code> override.</p></li>
+<li><p>Write the function declaration for the <code>operator-=</code> override.</p></li>
+<li><p>Write the Doxygen comment header for the <code>operator[]</code> override.</p></li>
+<li><p>Implement the <code>operator+=</code> override.</p></li>
+<li><p>Implement the <code>operator-=</code> override.</p></li>
+<li>Implement the <code>operator[]</code> override.</li>
+<li><p>Built the project and execute the `PA03Tests' unit tests. Make sure they all pass.</p></li>
+</ol></li>
+<li><p>Before submitting your code, execute the <code>make clean</code> command to remove the executables and any object files.</p></li>
+<li><p>Once the unit tests pass and the application produces the expected results, zip the entire <code>4-PA3</code> directory and submit the resulting .zip file via this assignment.</p></li>
+</ol>
+<h3 id="grading">Grading</h3>
+<p>You will receive one point for the assignment if all the Pass criteria in the attached rubric are met; otherwise, you will receive zero points for the assignment.</p>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h2 id="removing-the-maximum-value-in-a-bst">Removing the maximum value in a BST</h2>
+<p>In this assignment, you will add a new method to our <code>BST</code> class, <code>removeMax</code>, with this signature:</p>
+<pre><code>T removeMax();</code></pre>
+<p>When called, the method finds the largest element in the BST, removes its node, and returns the value. If the method is called on an empty tree, it throws a <code>std::out_of_range</code> exception.</p>
+<p>In this assignment, you will write <code>removeMax</code> and the doctest unit tests for the new method. Write the unit tests <em>first</em>, and then write your <code>removeMax</code> code. This is called <em>test-first development</em>. Test-first development is a good practice because it forces a developer to really understand the method she is going to write, before coding it. If you cannot write the tests for the method first, do you really understand what the method is supposed to do?</p>
+<h3 id="files-in-the-directory">Files in the directory</h3>
+<p><code>BST.hpp</code> : a copy of the <code>BST</code> class developed in this module. This is the file you should modify for this assignment.</p>
+<p><code>BSTTests.cpp</code> : phantom main program file for making the <code>BSTTests</code> unit test application.</p>
+<p><code>makefile</code> : makefile for building the <code>BSTTests</code> unit test application, and the <code>LastWord</code> main application.</p>
+<p><code>LastWord.cpp</code> : simple application to exercise the new <code>removeMax</code> method. This app loads the dictionary from the spell-checking app demo into a BST, then removes the last word (alphabetically) from the dictionary.</p>
+<h3 id="instructions">Instructions</h3>
+<p><em>[Note: the code for PA06 will compile with the files as delivered. However, the <code>LastWord</code> application will not run, and the <code>BSTTests</code> unit tests will not pass.]</em></p>
+<ol style="list-style-type: decimal">
+<li><p>Edit <code>BST.hpp</code> and search for the <code>TODO</code> comments. Complete the following tasks:</p>
+<ol style="list-style-type: lower-alpha">
+<li><p>Complete the doctest unit test for the <code>removeMax</code> method. Look at other doctest unit tests in the file -- they all begin with <code>TEST_CASE</code> -- for some inspiration.</p></li>
+<li><p>Complete the definition of the <code>removeMax</code> method.</p></li>
+<li><p>Build the project and execute the `BSTTests' unit tests. Make sure they all pass.</p></li>
+<li><p>Execute the <code>LastWord</code> application to see what the last word in the dictionary is.</p></li>
+</ol></li>
+<li><p>Before submitting your code, execute the <code>make clean</code> command to remove the executables and any object files.</p></li>
+<li><p>Once the unit tests pass and the application produces the expected results, zip the entire <code>3-PA6</code> directory and submit the resulting .zip file via this assignment.</p></li>
+</ol>
+<h3 id="grading">Grading</h3>
+<p>You will receive one point for the assignment if all the Pass criteria in the attached rubric are met; otherwise, you will receive zero points for the assignment.</p>
+</body>
+</html>

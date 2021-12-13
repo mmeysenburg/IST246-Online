@@ -1,0 +1,4 @@
+<map id="Movie" name="Movie">
+<area shape="rect" id="node2" href="$classSLL.html" title="{SLL\&lt; std::string \&gt;\n|&#45; n\l|+ SLL()\l+ SLL()\l+ ~SLL()\l+ add()\l+ clear()\l+ contains()\l+ get()\l+ isEmpty()\l+ remove()\l+ set()\l+ size()\l+ operator=()\l&#45; copy()\l}" alt="" coords="5,160,132,413"/>
+<area shape="rect" id="node3" href="$classSLL_1_1Node.html" title="Node in the singly&#45;linked list. " alt="" coords="11,5,127,97"/>
+</map>

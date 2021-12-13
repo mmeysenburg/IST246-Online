@@ -1,0 +1,390 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h2 id="module-6-binary-search-trees">Module 6: Binary Search Trees</h2>
+<p>In this module, we will work with our first <em>non-linear</em> data structure, the <em>binary search tree</em>. Each of our previous structures has been linear, because there was a simple, straightforward, front-to-back arrangement of the elements in the structure. This held true for our singly-linked list, our doubly-linked list, and even for stacks and queues. A binary search tree will be different because the elements in the tree have a <em>hierarchical</em> structure, and because a node may have up to <em>two</em> nodes &quot;after&quot; it in the structure.</p>
+<p>Binary search trees are helpful for doing fast membership testing in our programs -- given value <em>x</em>, is <em>x</em> in the structure? Our module example, a simple spell-checking program, illustrates this usage.</p>
+<p>Before we delve deeper into the implementation of our binary search tree, let us first look at some tree terminology and basic algorithms.</p>
+<h3 id="binary-trees">Binary trees</h3>
+<p>In computing, a <em>tree</em> that, if you squint your eyes, looks something like an upside-down tree from nature. The tree has a single <em>root node</em>, which has one or more <em>branches</em>, which lead to subtrees, which are themselves trees. The recursive nature of this definition might lead you to think that recursive algorithms will play a large part in a tree data structure, and you would be right in thinking that.</p>
+<p>A node in a generic tree can have an arbitrary number of branches to subtrees, but any node in a <em>binary</em> tree has at most two branches to subtrees.</p>
+<h3 id="binary-tree-structure">Binary tree structure</h3>
+<p>Data will be stored in our binary tree in nodes, just as was the case for our singly-linked and doubly-linked lists. Each node will have a data payload, and pointers to the left and right subtree of the node:</p>
+<p><img src="https://doane.instructure.com/files/982260/download?download_frd=1" alt="Binary tree node" title="Binary tree node"/></p>
+<p>In a binary tree, we will maintain a special pointer, <code>pRoot</code>, to the root node. Each node's pointers will refer to the left and right subtrees, with zero values representing the absence of a subtree on that side. So, a binary tree of integers might look like this:</p>
+<p><img src="https://doane.instructure.com/files/982276/download?download_frd=1" alt="Binary tree of 7 integers" title="Binary tree of 7 integers"/></p>
+<p>The root of this tree contains 6. The root node has two children, 2 and 1, which in turn each have two children. In our discussions here, we will say &quot;node 6&quot; rather than &quot;the node containing 6,&quot; just to keep our word count down a little.</p>
+<p>Here are some tree terms that help us understand how the values in a tree are related to each other. Node 6 is the <em>root</em> of the tree, and it has two <em>children</em>, node 2 and node 1. Each of these is the root of a binary tree. Node 1 has two children, 3 and (another) 2; these are <em>descendants</em> of node 6. Node 6 is the <em>parent</em> of nodes 2 and 1, and an <em>ancestor</em> of node 3.</p>
+<p>Nodes 10, 4, 3, and the bottom 2 are <em>leaf</em> nodes, because they have no children. Nodes (upper) 2 and 1 are <em>internal</em> nodes, because they each have one or more children. The root is on <em>level 0</em> of the tree, while the first 2 and node 1 are on level 1, and nodes 10, 4, 3, and the second 2 are on level 2.</p>
+<p>The <em>height</em> of this tree is the maximum number of <em>edges</em> (pointer links) between the root node and a leaf, i.e., two. This particular tree is a <em>full</em> binary tree, since every node except for the leaf nodes has two children.</p>
+<p>Not every tree has to be full. For example, if the duplicate node 2 was not in the tree, it would look like this:</p>
+<p><img src="https://doane.instructure.com/files/982296/download?download_frd=1" alt="Complete binary tree" title="Complete binary tree"/></p>
+<p>In this case, when every level is full except the last, and the nodes on the last level are &quot;left justified,&quot; the tree is termed a <em>complete</em> binary tree.</p>
+<p>Not every binary tree must be complete or full. For example, consider this tree:</p>
+<p><img src="https://doane.instructure.com/files/982603/download?download_frd=1" alt="Non-full binary tree" title="Non-full binary tree"/></p>
+<p>In this case, nodes 2 and 1 both have only one child each. This is allowed, because the criteria for a tree to be &quot;binary&quot; is that each node has <em>at most</em> two children. This applies regardless of the level of the node, or whether the node is internal or a leaf node.</p>
+<p>Likewise, consider this tree:</p>
+<p><img src="https://doane.instructure.com/files/982604/download?download_frd=1" alt="Chain binary tree" title="Chain binary tree"/></p>
+<p>This is still a binary tree. Such a tree, where each node actually has at most one child, is called a <em>chain</em>. A chain binary tree is actually just a singly linked list.</p>
+<h3 id="binary-tree-traversal-algorithms">Binary tree traversal algorithms</h3>
+<p>Some of the methods we will examine later on -- methods to print all of the tree elements and to free the memory allocated to the tree, for example -- need to &quot;visit&quot; each of the nodes in the tree. But, what order should we visit them in? It's pretty clear that we should start at the root, but from there, where do we go? In a linked list, the order was dictated by the linear structure of the list: we start at the head of the list and go to the end, or, if it is a doubly-linked list, we could start at the tail and go towards the front. But, with a binary tree, things are not so clear cut. There are three basic binary tree traversal algorithms to look at: <em>pre-order</em>, <em>post-order</em>, and <em>in-order</em> traversals. Each of these is a recursive algorithm.</p>
+<h4 id="pre-order-traversal">Pre-order traversal</h4>
+<p>In a pre-order traversal of a binary tree, we perform whatever action it is that we are doing to the tree (e.g., printing) on the current node, then recursively call the pre-order traversal method on the left subtree, and then recursively call it again on the right subtree. The base case is when we have an empty subtree. In that case, we do nothing. This pseudocode algorithm describes the process:</p>
+<pre><code>preOrder(Node *pCurr) 
+    if pCurr != 0
+        process pCurr                // whatever that means
+        preOrder(pCurr-&gt;pLeft)
+        preOrder(pCurr-&gt;pRight)</code></pre>
+<p>Consider this simplified version of the first binary tree we viewed above:</p>
+<p><img src="https://doane.instructure.com/files/982755/download?download_frd=1" alt="Simplified full binary tree" title="Simplified full binary tree"/></p>
+<p>A pre-order traversal would visit the nodes of this tree according to this sequence: 6 - 2 - 10 - 4 - 1 - 3 - 2.</p>
+<h4 id="post-order-traversal">Post-order traversal</h4>
+<p>In a post-order traversal of a binary tree, we have our recursive calls on the left and right subtrees <em>first</em>, and then we process the current node. We have the same base case as before. A post-order traversal is useful when we are freeing the memory allocated for the tree, because we cannot delete the current node until all its descendants have been deleted. This is the pseudocode for a post-order traversal:</p>
+<pre><code>postOrder(Node *pCurr) 
+    if pCurr != 0
+        postOrder(pCurr-&gt;pLeft)
+        postOrder(pCurr-&gt;pRight)
+        process pCurr                // whatever that means</code></pre>
+<p>A post-order of the seven-node tree above would visit the nodes of the tree in this sequence: 10 - 4 - 2 - 3 - 2 - 1 - 6.</p>
+<h4 id="in-order-traversal">In-order traversal</h4>
+<p>In an in-order traversal of a binary tree, we recursively traverse the left subtree first, then process the current node, and then recursively traverse the right subtree. We will see that an in-order traversal of a binary search tree (which we will define shortly) has a special side effect. This is the pseudocode for an in-order traversal:</p>
+<pre><code>inOrder(Node *pCurr) 
+    if pCurr != 0
+        inOrder(pCurr-&gt;pLeft)
+        process pCurr                // whatever that means
+        inOrder(pCurr-&gt;pRight)</code></pre>
+<p>We will use a different tree to illustrate the in-order traversal:</p>
+<p><img src="https://doane.instructure.com/files/982766/download?download_frd=1" alt="Full binary search tree" title="Full binary search tree"/></p>
+<p>An in-order traversal of this tree would visit the nodes of the tree in this sequence: 1 - 2 - 3 - 4 - 6 - 10 - 12. As you can see, the in-order traversal visits the nodes in increasing order. The traversal works this way because this is actually an instance of a <em>binary search tree</em>.</p>
+<h3 id="binary-search-trees">Binary <em>search</em> trees</h3>
+<p>A <em>binary search tree</em> (BST) is a binary tree in which there are no duplicate values in the tree (i.e., every node holds a different value), and where for any node, the value in that node is greater than all the values in the node's left subtree and less than all the values in the node's right subtree. BSTs do not have to be full or complete, but their performance is maximized when the tree is full or complete. As we noted, the tree in the in-order traversal example was a BST, while none of the other previous trees were. You may wish to go back and look at the previous trees, to see why they were not BSTs.</p>
+<p>Now that we have an understanding of what a BST is, we can turn to a C++ implementation of the structure.</p>
+<h3 id="bst-implementation">BST implementation</h3>
+<p><strong>[For this section, refer to the <code>module06\1-BST\BST.hpp</code> file from the course's git repository.]</strong></p>
+<p>Here is a UML class diagram for our templated BST implementation:</p>
+<p><img src="https://doane.instructure.com/files/982777/download?download_frd=1" alt="BST UML class diagram" title="BST UML class diagram"/></p>
+<p>You can see that, as was the case for our singly- and doubly-linked lists, we have a private nested <code>Node</code> class within the <code>BST</code> class. The <code>Node</code> class has two node pointers, <code>pLeft</code> and <code>pRight</code>. Some of our methods are recursive, with public interface methods and private helper methods (<code>clear</code> and <code>contains</code>, e.g.), while others are iterative and require no helper methods (<code>insert</code> and <code>remove</code>, e.g.). We will look at several methods in the class, starting with the simpler cases and working our way up to the most complex method.</p>
+<h4 id="contains-method"><code>contains</code> method</h4>
+<p>Remember that the primary usage of a BST is for membership testing -- &quot;is element <em>x</em> in the tree?&quot; So, our <code>contains</code> method takes a value of type <code>T</code> as a parameter, and returns true if the value is in the tree, or false if it is not in the tree. There are two versions of <code>contain</code>: the public &quot;interface&quot; method called by users of the class, and the private, recursive helper method that actually does the work. The public method is implemented inline and looks like this:</p>
+<pre><code>bool contains(const T &amp;val) const { return contains(val, pRoot); }</code></pre>
+<p>It is apparent that this public method simply calls the private version of the method. So, why do we bother? Well, look at the parameter list for the private version: the second parameter is <code>pRoot</code>, the pointer to the root node of the tree. The private method needs to have a pointer to the node it is currently working on, and so we pass in the root pointer to begin the recursive process. We <em>DO NOT</em> want the users of our class to have access to the pointers used in the structure. So, we hide that bit of complexity from our users behind the public <code>contains</code> method.</p>
+<p>Now, let us examine the private, recursive version of the method:</p>
+<pre><code>template &lt;class T&gt;
+bool BST&lt;T&gt;::contains(const T &amp;val, Node *pCurr) const {
+    if(pCurr == 0) {
+        // empty tree does not contain val
+        return false;
+    } else if(pCurr-&gt;data == val) {
+        // found it? return true
+        return true;
+    } else if(val &lt; pCurr-&gt;data) {
+        // less than curr? go left
+        return contains(val, pCurr-&gt;pLeft);
+    } else {
+        // only other option is to go right
+        return contains(val, pCurr-&gt;pRight);
+    }
+}</code></pre>
+<p>To solve a problem with the <em>divide and conquer</em> strategy using recursion, we need two things:</p>
+<ol style="list-style-type: decimal">
+<li>A base case, i.e., an instance of the problem that is so simple it can be solved immediately, and</li>
+<li>A partitioning that divides an instance of the problem into one or more smaller instances of the same problem.</li>
+</ol>
+<p>For our <code>contains</code> method, we have two base cases, which are easy to think about if you try to imagine the easiest BSTs to search. Well, an empty tree certainly does not contain <code>val</code>, so we know the answer right away: <code>false</code>. Secondly, a tree with the value we are searching for in the root node certainly contains <code>val</code>, so again we know the answer: <code>true</code>. These base cases are taken care of by the first two <code>if</code> statements in the code.</p>
+<p>Our partitioning takes advantage of the characteristics of a BST to cut the size of the problem in half. If the current node does not contain <code>val</code>, then if it is in the tree, it must be in the left subtree or the right subtree. Based on the BST structure, if <code>val</code> is less than the value in the current node, it must be in the left subtree. So, we return the value of a recursive call to <code>contains</code> on the left subtree. If <code>val</code> is greater than the value in the current node, it must be in the right subtree, so we return the result of a recursive call of <code>contains</code> on the right subtree.</p>
+<p>Eventually, if <code>val</code> is in the tree, the recursive process will find its node, and the method returns <code>true</code>. If <code>val</code> is not in the tree, eventually the recursive process will work its way down to an empty subtree, and return <code>false</code>.</p>
+<p>This diagram shows what happens when we search our sample BST for the value 3:</p>
+<p><img src="https://doane.instructure.com/files/982797/download?download_frd=1" alt="Successful BST search" title="Successful BST search"/></p>
+<p>The <code>contains</code> method starts at the root. 3 is less than 4, so a recursive call on the left subtree is made. Then, 3 is greater than 2, so a second recursive call is made, on node 2's right subtree. Now, 3 is equal to 3, so the method returns <code>true</code> -- and this return value is returned by both of the previous invocations of <code>contains</code> as the recursion unwinds.</p>
+<p>On the other hand, what if we search for 7?</p>
+<p><img src="https://doane.instructure.com/files/982798/download?download_frd=1" alt="Unsuccessful BST search" title="Unsuccessful BST search"/></p>
+<p>In this case, <code>contains</code> again starts at the root. 7 is greater than 4, so a recursive call on the right subtree is made. Then, 7 is less than 10, so a recursive call on the left subtree of node 10 is made. Likewise, 7 is greater than 6, so a recursive call on the right subtree of node 6 is made. Node 6 has no right subtree, so it's value of <code>pRight</code> is zero. Hence, the recursive chain has run into the &quot;empty tree&quot; base case, and the value <code>false</code> is returned by the method.</p>
+<h4 id="clear-method"><code>clear</code> method</h4>
+<p>The <code>clear</code> method is also implemented recursively, with a public method called by <code>BST</code> users and a private, recursive helper method. The public method calls the private version to free all of the nodes in the tree, then performs some housekeeping by setting the values of <code>n</code> and <code>pRoot</code> to zero:</p>
+<pre><code>template &lt;class T&gt;
+void BST&lt;T&gt;::clear() {
+    clear(pRoot);
+    n = 0u;
+    pRoot = 0;
+}</code></pre>
+<p>The private version of the <code>clear</code> method takes a single parameter, a pointer to the current node in the process, <code>pCurr</code>.</p>
+<pre><code>template &lt;class T&gt;
+void BST&lt;T&gt;::clear(Node *pCurr) {
+    if (pCurr != 0) {
+        // post-order traversal is needed here - delete left and right 
+        // subtrees first, then the current node
+        clear(pCurr-&gt;pLeft);
+        clear(pCurr-&gt;pRight);
+        delete pCurr;
+    }
+}</code></pre>
+<p>As was the case for the <code>contains</code> method, we have an empty-tree base case here. If there are no nodes in the tree, there is nothing to do, so we invert the base case condition and only do something if the value of <code>pCurr</code> is non-zero. This method uses a post-order traversal of the tree, since we need to remove the subtrees before deleting a node. If we tried to delete the current node first, the values of <code>pLeft</code> and <code>pRight</code> could be changed by the time we try to use them in recursive calls. Therefore, we recursively delete the left subtree, recursively delete the right subtree, and then delete the current node with the <code>delete pCurr</code> statement.</p>
+<h4 id="copy-method"><code>copy</code> method</h4>
+<p>The <code>copy</code> method is used by the copy constructor and the assignment operator override. There is no corresponding public method, only the private, recursive method:</p>
+<pre><code>template &lt;class T&gt;
+typename BST&lt;T&gt;::Node *BST&lt;T&gt;::copy(Node* pOtherCurr) {
+    if(pOtherCurr != 0) {
+        Node *pCurr = new Node(pOtherCurr-&gt;data);
+        n++;
+        pCurr-&gt;pLeft = copy(pOtherCurr-&gt;pLeft);
+        pCurr-&gt;pRight = copy(pOtherCurr-&gt;pRight);
+
+
+        return pCurr;
+    } else {
+        return 0;
+    }
+}</code></pre>
+<p>The <code>copy</code> method returns a pointer to a <code>Node</code>, which in each case will be the root of a subtree and eventually the root of the whole tree. Its parameter is a pointer to a node <em>in the tree we are copying from</em>. This method uses a pre-order traversal of the other tree, making identical nodes in this tree as we go along. So, for a node in the other tree referred to by the <code>pOtherCurr</code> pointer, we make our new identical node referred to by the <code>pCurr</code> pointer. Then, we set <code>pCurr-&gt;pLeft</code> to the result of a recursive call on <code>pOtherCurr-&gt;pLeft</code>, and <code>pCurr-&gt;pRight</code> to the result of a recursive call on <code>pOtherCurr-&gt;pRight</code>. Then, we return the value of <code>pCurr</code>. The base case is when <code>pOtherCurr</code> refers to an empty subtree, in which case the method returns the value zero.</p>
+<h4 id="insert-method"><code>insert</code> method</h4>
+<p>The <code>insert</code> method adds a new element to the BST, such that the binary search tree properties still apply after the insertion. Since duplicates are not allowed in a BST, not every call to <code>insert</code> will actually add a new element to the tree. So, we will design the method to return a <code>bool</code> -- <code>true</code> if the value was inserted (i.e., it was not a duplicate element) or <code>false</code> if the value was not inserted (i.e., it was a duplicate element).</p>
+<p>The <code>insert</code> method begins with a search, similar to that in the <code>contains</code> method. The goal is to find the leaf position where the value should be added to the tree, or to find the value already in the tree. Instead of recursion, here we will use iteration, and we will maintain a <code>pParent</code> pointer along the way, similar to how we moved both <code>pCurr</code> and <code>pPrev</code> through one of our linked lists. Here is the code for <code>insert</code>:</p>
+<pre><code>template &lt;class T&gt;
+bool BST&lt;T&gt;::insert(const T&amp; val) {
+    // set up pointers to current node and its parent.
+    Node *pCurr = pRoot, *pParent = 0;
+
+
+    // search for the value&#39;s location in the tree. This code illustrates
+    // how to search non-recursively, while the contains method uses 
+    // recursion. It is easier to keep track of the parent pointer if we use
+    // iteration. 
+    while(pCurr != 0) {
+        pParent = pCurr;
+        if(val &lt; pCurr-&gt;data) {
+            // search in left subtree
+            pCurr = pCurr-&gt;pLeft;
+        } else if(val &gt; pCurr-&gt;data) {
+            // search in right subtree
+            pCurr = pCurr-&gt;pRight;
+        } else {
+            // val == pCurr-&gt;data means we are inserting a duplicate
+            return false;
+        }
+    } // while
+
+
+    // now, pCurr is the (empty) spot where the value should be inserted,
+    // and pParent is the parent node. Find out which side we are adding on,
+    // and add the new node. Special case is a previously empty tree.
+    Node *pN = new Node(val);
+    if(pRoot == 0) {
+        pRoot = pN;
+    } else {
+        if(val &lt; pParent-&gt;data) {
+            pParent-&gt;pLeft = pN;
+        } else {
+            pParent-&gt;pRight = pN;
+        }
+    }
+
+
+    n++;
+    return true;
+}</code></pre>
+<p>Assuming the <code>while</code> loop terminates, the <code>pCurr</code> pointer is in the empty leaf position where the new element should be inserted. So, the code makes a new node, and then uses the <code>pParent</code> pointer to determine whether the new element is a left or right child of the parent element. Once the appropriate pointer has been set, we increment the size variable and return <code>true</code>.</p>
+<h4 id="remove-method"><code>remove</code> method</h4>
+<p>Similar to the <code>insert</code> method, our <code>remove</code> method will return a <code>bool</code>: true if the specified element was removed from the tree, or false if the element was not in the tree to begin with. The <code>remove</code> method is the most complicated of the methods in the <code>BST</code> class, so we will break the code into three chunks to make it easier to understand.</p>
+<p>In the first phase of the <code>remove</code> method, we use iteration to find the location of the value to be deleted, or return <code>false</code> if the value is not in the tree:</p>
+<pre><code>template &lt;class T&gt;
+bool BST&lt;T&gt;::remove(const T&amp; val) {
+    // establish pointers to the current node and its parent
+    Node *pCurr = pRoot, *pParent = 0;
+
+
+    // loop until we find an empty space (val not in tree), or the node
+    // containing val. Update so that pCurr points to the space or node,
+    // and pParent points to the parent of pCurr. 
+    while(pCurr != 0 &amp;&amp; pCurr-&gt;data != val) {
+        pParent = pCurr;
+        if(val &lt; pCurr-&gt;data) {
+            // search left subtree
+            pCurr = pCurr-&gt;pLeft;
+        } else {
+            // search right subtree
+            pCurr = pCurr-&gt;pRight;
+        }
+    }
+
+
+    // empty space? we do nothing!
+    if(pCurr == 0) {
+        return false;
+    }
+
+</code></pre>
+<p>Once we have reached the end of the above block of code, <code>pCurr</code> points to the node with the value to remove from the tree, and <code>pParent</code> points to that node's parent. What happens next depends on the number of children <code>pCurr</code>'s node has.</p>
+<p>Suppose we are removing a node with no children, i.e., a leaf node, like node 3 in this partial BST:</p>
+<p><img src="https://doane.instructure.com/files/982995/download?download_frd=1" alt="Removing a node with no children" title="Removing a node with no children"/></p>
+<p>This case is pretty simple -- we just delete <code>pCurr</code> and set <code>pParent-&gt;pLeft</code> to zero.</p>
+<p>Removing a node with one child is just as easy. Suppose we are removing node 8 from this partial tree:</p>
+<p><img src="https://doane.instructure.com/files/982997/download?download_frd=1" alt="Removing a node with one child" title="Removing a node with one child"/></p>
+<p>Here we can set <code>pParent-&gt;pRight</code> to <code>pCurr-&gt;pLeft</code>, then delete <code>pCurr</code>.</p>
+<p>In the situation where the node we wish to remove has two children, things are more difficult. Consider this tree, and suppose we are removing node 10:</p>
+<p><img src="https://doane.instructure.com/files/982999/download?download_frd=1" alt="Removing a node with two children" title="Removing a node with two children"/></p>
+<p>What we will do is find node 10's <em>inorder successor</em>, i.e., the smallest value in node 10's right subtree. In this image, node 12 is node 10's inorder successor. Then, we will swap the data in the two nodes, and update <code>pCurr</code> and <code>pParent</code> to the position of the inorder successor node, like this:</p>
+<p><img src="https://doane.instructure.com/files/983018/download?download_frd=1" alt="Swap with inorder successor" title="Swap with inorder successor"/></p>
+<p>Now, node 12 has been repositioned to maintain the BST properties, while node 10, which violates the BST properties, will be removed. Note that the inorder successor node will always be a node with zero or one children, because it can never have a left child. If it did, the left branch would lead to a smaller value, making it not the inorder successor.</p>
+<p>The second section of code performs this kind of operation if the value we want to remove is in a node with two children:</p>
+<pre><code>    // otherwise, what we do depends on number of children the node has.
+    // If node containing val has two children, we make some modifications
+    // so that the node to delete will have zero or one child.
+    if(pCurr-&gt;pLeft != 0 &amp;&amp; pCurr-&gt;pRight != 0) {
+        // find inorder successor of this node -- smallest value in the right
+        // subtree. Start at the root of right subtree...
+        Node* pInorderSuccessor = pCurr-&gt;pRight;
+        Node* pIoSParent = pCurr;
+
+
+        // ... then go as far left as possible in the right subtree
+        while(pInorderSuccessor-&gt;pLeft != 0) {
+            pIoSParent = pInorderSuccessor;
+            pInorderSuccessor = pInorderSuccessor-&gt;pLeft;
+        }
+
+
+        // move data from inorder successor to current node
+        pCurr-&gt;data = pInorderSuccessor-&gt;data;
+
+
+        // update pCurr and pParent to refer to the inorder successor node and
+        // its parent. Since we went as far left as possible in this subtree,
+        // pCurr&#39;s node will have at most one child, and the remaining code 
+        // will remove the node (now containing the value we wanted to remove 
+        // in the first place) without doing anything else special. 
+        pCurr = pInorderSuccessor;
+        pParent = pIoSParent;
+    }
+
+</code></pre>
+<p>The final section of code deals with the zero or one-child cases, which are the only options, thanks to the inorder successor swap code above. Here, we will manage <em>three</em> pointers: <code>pCurr</code>, which points to the node to remove, <code>pParent</code>, that node's parent, and <code>pReplacement</code>, the node that will take <code>pCurr</code>'s place in the tree:</p>
+<pre><code>    // now pCurr points to a node with zero or one child. pCurr
+    // is the node to delete. First, get a pointer to the node to replace
+    // pCurr&#39;s node with. If there are zero children, pReplacement will be 0.
+    Node *pReplacement;
+    if(pCurr-&gt;pLeft != 0) {
+        pReplacement = pCurr-&gt;pLeft;
+    } else {
+        pReplacement = pCurr-&gt;pRight;
+    }
+
+
+    // move the replacement node into pCurr&#39;s position in the tree
+    if(pCurr == pRoot) {
+        // special case for deleting current root node
+        pRoot = pReplacement;
+    } else {
+        // attach replacement node to proper child of the parent
+        if(pCurr == pParent-&gt;pLeft) {
+            pParent-&gt;pLeft = pReplacement;
+        } else {
+            pParent-&gt;pRight = pReplacement;
+        }
+    }
+
+
+    // finally! delete the current node
+    delete pCurr;
+    n--;
+    return true;
+}
+
+</code></pre>
+<h3 id="bst-time-complexities">BST time complexities</h3>
+<p>At the outset, we said that BSTs were good for fast membership testing. For the simple BST we have implemented, this holds true as long as the BST does not become a chain. If our BST is full or complete, then then time complexity for our operations will be the depth of the tree, <em>O(lg n)</em>, where <em>n</em> is the number of values in the tree, and <em>lg</em> is the base-2 logarithm.</p>
+<p>On the other hand, if the BST does become a chain, then all of our operations become <em>O(n)</em> in the worst case, i.e., no better than the performance of a linked list.</p>
+<p>This table summarizes the best, worst, and average time complexities of our BST.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Operation</th>
+<th><em>B(n)</em></th>
+<th><em>A(n)</em></th>
+<th><em>W(n)</em></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>contains</code></td>
+<td>1</td>
+<td><em>O(lg n)</em></td>
+<td><em>O(n)</em></td>
+</tr>
+<tr class="even">
+<td><code>insert</code></td>
+<td>1</td>
+<td><em>O(lg n)</em></td>
+<td><em>O(n)</em></td>
+</tr>
+<tr class="odd">
+<td><code>remove</code></td>
+<td>1</td>
+<td><em>O(lg n)</em></td>
+<td><em>O(n)</em></td>
+</tr>
+</tbody>
+</table>
+<p>The other operations in our BST are either constant-time (<code>size</code>, <code>isEmpty</code>) or linear-time (<code>copy</code>, <code>clear</code>, printing).</p>
+<h3 id="more-advanced-bsts">More advanced BSTs</h3>
+<p>&quot;Real world&quot; BSTs are modified so that they always maintain a nearly complete tree, avoiding chains. They do this without an undue time penalty, so that the complexity of the contains, insert, and remove operations all become <em>O(lg n)</em> in the worst case. Two examples of trees like this are AVL trees and Red-Black trees. Since we are just introducing BSTs in this course, we will not delve into these structures here.</p>
+<h3 id="sample-application-spell-checking">Sample application: spell checking</h3>
+<p><strong>[For this section, refer to the <code>module06\2-SpellCheck\SpellCheck.cpp</code> file from the course's git repository.]</strong></p>
+<p>For this module's sample app, we will develop a very simple spell-checking system. The strategy is this: load a collection of correctly-spelled words into a BST. Then, examine each word in the file we want to spellcheck. If a word is <em>not</em> in the BST, then we will assume it is spelled incorrectly, and print it out to the standard output.</p>
+<p>Since the heavy lifting is done by the <code>BST</code> class, the main program for the spell-checking app is pretty simple:</p>
+<pre><code>int main() {
+    // read dictionary words into a BST
+    BST&lt;std::string&gt; dictionary;
+    std::ifstream dictionaryFile(&quot;dictionary.txt&quot;);
+    std::string word;
+    while(dictionaryFile &gt;&gt; word) {
+        dictionary.insert(word);
+    }
+    dictionaryFile.close();
+
+
+    // read file to check from standard input
+    while(std::cin &gt;&gt; word) {
+        word = stripNonAlpha(toLower(word));
+        // dump all words not in the dictionary to standard output
+        if(word != &quot;&quot; &amp;&amp; !dictionary.contains(word)) {
+            std::cout &lt;&lt; word &lt;&lt; std::endl;
+        }
+    }
+
+
+    return EXIT_SUCCESS;
+}</code></pre>
+<p>First, we read all of the words in <code>dictionary.txt</code> into a BST named <code>dictionary</code>. There are about 77,000 correctly-spelled words in the file, one per line. We have shuffled the contents of the file, though, so that they are not in any particular order, as you can see from the first few lines of the file:</p>
+<pre><code>grog
+dirtiest
+counteraction
+exfoliated
+cointreau
+breeder
+jape
+pettifogging
+attenuating
+sewed
+...
+...</code></pre>
+<p>If we had the words in the dictionary in alphabetical order, then our BST would be a chain, since each word would be larger than the last. This would make our spellchecker really, really slow! By having the dictionary file in random order, our BST will be shallower, and the performance of the application will be much faster.</p>
+<p>Our program reads the file to spellcheck from standard input, word by word. From a bash command line, we could check the spelling of the novel <em>War and Peace</em> by piping the contents of the file into the app, via this command:</p>
+<pre><code>cat war-and-peace.txt | ./SpellCheck</code></pre>
+<p>Punctuation and numbers are removed from each word, and the word is converted to lower case to match the words in the dictionary. Then, we make a call to see if the BST contains the word. If so, we assume the word is spelled correctly and take no action. If the word is not in the BST, we assume the word is spelled incorrectly, and output it to the standard output.</p>
+<h4 id="an-object-lesson-on-time-complexity">An object lesson on time complexity</h4>
+<p>Often there are several different data structures we could use to solve a particular problem. All things being equal, we should choose the data structure with the lower time complexity to solve the problem.</p>
+<p>This sample application shows a very good example of why we should do this. The file <code>BadSpellCheck.cpp</code> is a copy of the spellchecker, modified to use a C++ Standard Template Library <code>list</code> object for the dictionary instead of a BST. The <code>list</code> class is the industrial-strength, built-in doubly-linked list data structure that is distributed with the C++ language.</p>
+<p>We would expect that our BST dictionary to take approximately <em>O(lg n)</em> time to see if a word is in the dictionary, where <em>n</em> is the size of the dictionary. <em>lg 77000</em> is approximately 17, so the BST should be able to check a word in 17 steps or less.</p>
+<p>On the other hand, the <code>list</code> requires <em>O(n)</em> time to search. I.e., we expect the <code>list</code> to take <em>77,000</em> steps to see if a word is misspelled!</p>
+<p>You can execute the <code>list</code>-based spell checker on your system, to see what this difference looks like in real time, with the command:</p>
+<pre><code>cat war-and-peace.txt | ./BadSpellCheck</code></pre>
+<p><em>Warning:</em> you might want to get some coffee or wash the dishes while the <code>list</code>-based system runs.</p>
+</body>
+</html>

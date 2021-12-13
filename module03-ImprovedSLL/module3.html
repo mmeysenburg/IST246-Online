@@ -1,0 +1,335 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h2 id="module-3-an-improved-singly-linked-list">Module 3: An Improved Singly-Linked List</h2>
+<p>In this module, we will once again work on a singly-linked list. We will improve the data structure by <em>overriding</em> several operators so that the list &quot;plays nice&quot; with other C++ code. In particular, we will:</p>
+<ul>
+<li><p>override the stream insertion operator (<code>&lt;&lt;</code>), so that we can print our lists in the same way we print other objects in C++. Whenever we write a C++ class, if it makes sense to print objects of that type to the screen or write them to a text file, we should override the stream insertion operator. This is analogous to writing the <code>__str__</code> dunder method for a Python class we write, or the <code>toString</code> method for a Java class.</p></li>
+<li><p>override the assignment operator (<code>=</code>) and provide a <em>copy constructor</em>, to allow users of our list to make an existing list be just like an existing one, or to make a new list just like an existing one.</p></li>
+</ul>
+<p>The former operator overload is for convenience, so that we can, say, use <code>std::cout</code> output with our list. The latter operator overload is more of a necessity, so that our list will behave as it should when used in our code, and so that lists can be passed to functions as parameters or returned from functions. We will confront an issue that occurs whenever we write data structures: should our code create a <em>shallow copy</em> or a <em>deep copy</em> of a data structure?</p>
+<p>From this point on, all of the data structures we examine will support stream insertion and assignment, and have copy constructors.</p>
+<h3 id="stream-insertion-override">Stream insertion override</h3>
+<p><strong>[For this section, refer to the <code>module03\1-SLL\SLL.hpp</code> file from the course's git repository.]</strong></p>
+<p>In our first singly-linked list, <code>SimpleSLL</code>, we had to call a method from a list object in order to print the list to standard output:</p>
+<pre><code>SimpleSLL&lt;int&gt; list;
+
+
+// ... list is populated
+
+
+list.print();</code></pre>
+<p>This is not how we usually print things in C++. Additionally, the <code>print</code> method is configured to <em>only</em> print values to the standard output; there is no easy, efficient way to print the contents of a <code>SimpleSLL</code> to a text file. We would rather be able to print our list in the usual way, <em>and</em> be able to print to a text file if we desire, like this:</p>
+<pre><code>std::ofstream outFile(&quot;out.txt&quot;);
+
+
+// print to standard output
+std::cout &lt;&lt; list &lt;&lt; std::endl;
+
+
+// print to the file named &#39;out.txt&#39;
+outFile &lt;&lt; list &lt;&lt; std::endl;</code></pre>
+<p>We accomplish this by overriding the stream insertion operator (<code>&lt;&lt;</code>) so that the operator understands how to print our list. Let's examine how to do that.</p>
+<p>To differentiate between this version of the singly-linked list and the <code>SimpleSLL</code> structure of the previous module, this list is called <code>SLL</code>. The UML class diagram for the structure should be familiar to you, as it is very similar to the class diagram from the previous module.</p>
+<p><img src="https://doane.instructure.com/files/904889/download?download_frd=1" alt="SLL UML class diagram" title="SLL UML class diagram"/></p>
+<p>You may notice that there is now an extra constructor in the class diagram (the copy constructor described below), an override for the assignment operator, and a private <code>copy</code> method. In addition, the <code>print</code> method has been removed, because we are replacing that limited functionality with the more versatile operator override. The stream insertion operator override does not appear in the UML because it is not a member of the class, but rather a friend function of the class.</p>
+<p>We override operators in C++ by writing methods that specify what to do when that operator is invoked on objects of our class. The name of the method is <code>operatorXX</code>, where <code>XX</code> is the operator we are overriding. So, to override stream insertion for our list, we write an <code>operator&lt;&lt;</code> method. Likewise, the assignment operator is overridden with the <code>operator=</code> method.</p>
+<p>Before turning to copy constructors and assignment operators, let's examine the stream insertion override. The following appears in the <code>SLL</code> class declaration, just before the private data is declared:</p>
+<pre><code>template &lt;class T1&gt; 
+friend std::ostream &amp;operator&lt;&lt;(std::ostream &amp;out, const SLL&lt;T1&gt; &amp;list);</code></pre>
+<p>We can understand this override better by looking at the declaration piece-by-piece. The first line says that this is going to be a template method, but notice that the type is <code>T1</code>, while the type for data in the overall <code>SLL</code> class is <code>T</code>. What's going on there?</p>
+<p>Here is the explanation: Since the object on the left-hand side of the <code>&lt;&lt;</code> operator is an output stream (like <code>std::cout</code>) and <em>not</em> a <code>SLL</code> object, this operator override cannot be a part of the <code>SLL</code> class. To make the override able to efficiently print the values in the list, we want it to be able to access the private data (the pointers) of the <code>SLL</code> object being printed. So, we declare it to be a &quot;friend&quot; of the <code>SLL</code> class, with the <code>friend</code> keyword on the next line. Since it is not a class member, but is templated, we provide a different type name here.</p>
+<p>On the next line, we first make this override a friend of the <code>SLL</code> class. Then, we specify the return type of the overridden method: <code>std::ostream</code>. This allows us to chain the stream insertions, so that multiple values can be printed at once, like this:</p>
+<pre><code>std::cout &lt;&lt; &quot;My list is: &quot; &lt;&lt; list &lt;&lt; std::endl;</code></pre>
+<p>Next, we have the name of the override method, <code>operator&lt;&lt;</code>. The parameter list contains two values, since <code>&lt;&lt;</code> is a binary operator. The first parameter, <code>out</code>, is a reference to a <code>std::ostream</code> object, representing the stream we are printing the list to. In all of the standard output examples we showed above, the actual parameter for this formal parameter is <code>std::cout</code>.</p>
+<p>The second parameter is a constant reference to the <code>SLL</code> object being printed. The <code>const</code> keyword for this formal parameter means that the method cannot change the values in the list. We include this as a safeguard against ourselves (and future maintenance programmers), because we do not want printing to change the values in the data structure.</p>
+<p>The implementation of the <code>&lt;&lt;</code> override is the last thing in the <code>SLL.hpp</code> file:</p>
+<pre><code>template &lt;class T&gt; 
+std::ostream &amp;operator&lt;&lt;(std::ostream &amp;out, const SLL&lt;T&gt; &amp;list) {
+    out &lt;&lt; &quot;[&quot;;
+
+
+    // initialize a cursor to the head of the list
+    typename SLL&lt;T&gt;::Node *pCurr = list.pHead;
+
+
+    // iterate until the end
+    while (pCurr != 0) {
+        out &lt;&lt; pCurr-&gt;data;
+
+
+        // output no comma for last element
+        if(pCurr-&gt;pNext != 0) {
+            out &lt;&lt; &quot;, &quot;;
+        } 
+
+
+        // update cursor
+        pCurr = pCurr-&gt;pNext;
+    }
+
+
+    out &lt;&lt; &quot;]&quot;;
+
+
+    return out;        
+}</code></pre>
+<p>Here, outside of the class declaration, the name we use for the template data type is not important, so we choose to return to using <code>T</code> again, instead of the <code>T1</code> we used inside the declaration. This code is virtually the same as the body of the <code>print</code> method in the <code>SimpleSLL</code> class. The only real difference is that we are using the name of the formal parameter, <code>out</code>, as the output stream to print to.</p>
+<h3 id="deep-versus-shallow-copies">Deep versus shallow copies</h3>
+<p><strong>[For this section, refer to code in the <code>module03\2-CopyConstructor</code> directory in the course's git repository.]</strong></p>
+<p>Suppose we create two instances of the previous module's <code>SimpleSLL</code> class:</p>
+<pre><code>SimpleSLL&lt;int&gt; list1;
+for(int i = 0; i &lt; 5; i++) {
+  list1.add(i);
+}
+
+
+std::cout &lt;&lt; &quot;List 1: &quot;;
+list1.print();
+std::cout &lt;&lt; std::endl;
+
+
+SimpleSLL&lt;int&gt; list2;
+for(int i = 10; i &lt; 20; i++) {
+  list2.add(i);
+}
+
+
+std::cout &lt;&lt; &quot;List 2: &quot;;
+list2.print();
+std::cout &lt;&lt; std::endl;</code></pre>
+<p>At this point, we have two lists of integers, each with different lengths and values:</p>
+<pre><code>List 1: [4, 3, 2, 1, 0]
+
+
+List 2: [19, 18, 17, 16, 15, 14, 13, 12, 11, 10]</code></pre>
+<p>Now, what happens when we do this?</p>
+<pre><code>list1 = list2;
+
+
+std::cout &lt;&lt; &quot;List 1: &quot;;
+list1.print();
+std::cout &lt;&lt; std::endl;</code></pre>
+<p>The output makes it seem as if the assignment worked as we expected:</p>
+<pre><code>List 1: [19, 18, 17, 16, 15, 14, 13, 12, 11, 10]</code></pre>
+<p>But we actually have a problem! When the assignment happens, by default the C++ runtime copies the values of all of the fields in <code>list2</code> into the corresponding fields in <code>list1</code>. But what are these fields? There are only two fields in the <code>SimpleSLL</code> class: <code>pHead</code> and <code>n</code>. Therefore, the only things that change in <code>list1</code> are <code>pHead</code> and <code>n</code>. Consider this graphic depiction of the situation after the assignment:</p>
+<p><img src="https://doane.instructure.com/files/904906/download?download_frd=1" alt="SimpleSLL assignment memory leak" title="SimpleSLL assignment memory leak" /></p>
+<p>So, via this assignment, we've actually done two things:</p>
+<ul>
+<li><p>we have created a memory leak, because the chain of <code>SimpleSLL::Node</code> objects that was originally in <code>list1</code> is still allocated, but not referred to by any pointer. The memory required to hold these nodes will remain allocated but unreachable for the duration of our program. If assignment code like this was in a loop, we could quickly exhaust the memory allocated to our application, causing a crash.</p></li>
+<li><p>we have created a <em>shallow copy</em> of <code>list2</code>. In other words, <code>list1</code> merely refers to the existing data in <code>list2</code>, rather than having new copies of all the values in the list.</p></li>
+</ul>
+<p>We usually don't want a shallow copy as the result of assignment between data structures. To see why, consider this code, which happens after the assignment above has taken place:</p>
+<pre><code> for(int i = 0; i &lt; 10; i++) {
+    list2.set(i, 10 - i);
+  }
+
+
+  std::cout &lt;&lt; &quot;List 1 after List 2 is changed: &quot; &lt;&lt; std::endl;
+  list1.print();
+  list2.remove(0);
+  std::cout &lt;&lt; &quot;List 1 after List 2 element removed: &quot; &lt;&lt; std::endl;
+  list1.print();
+  std::cout &lt;&lt; &quot;List 1 size: &quot; &lt;&lt; list1.size() &lt;&lt; std::endl;
+  std::cout &lt;&lt; &quot;List 2: &quot;;
+  list2.print();</code></pre>
+<p>The problem with a shallow copy becomes apparent when we look at the output:</p>
+<pre><code>List 1 after List 2 is changed: 
+[10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+List 1 after List 2 element removed: 
+[0, 1]
+List 1 size: 10
+List 2: 
+[9, 8, 7, 6, 5, 4, 3, 2, 1]</code></pre>
+<p>First, we see that changing <code>list2</code> via repeated calls to the <code>set</code> method seems to have also changed the values in <code>list1</code>. We only expect that behavior when one variable is an alias or reference to another. Things get worse when we remove the first element of <code>list2</code>. That changes the value of the <code>pHead</code> field in <code>list2</code>, but the value of <code>pHead</code> still refers to the former <code>list2</code> <code>pHead</code>, which now points to memory our application no longer owns. We get nonsensical -- and unpredictable -- results when we print <code>list1</code>, while the <code>list1</code> size is not accurate. <code>list2</code> is perfectly fine, but the shallow copy <code>list1</code> is a mess.</p>
+<p>What we really want the assignment operator to do is to create a <em>deep copy</em> of the list. That is, after the assignment, we want <code>list1</code> to have elements identical to <code>list2</code>, but without allowing changes to <code>list2</code> to impact the state of <code>list1</code>. To create this deep copy behavior, we will create a private <code>copy</code> method in our new <code>SLL</code> class, a copy constructor, and an override of the assignment operator, <code>=</code>.</p>
+<h3 id="copy-method"><code>copy</code> method</h3>
+<p><strong>[For this section, refer to the <code>module03\1-SLL\SLL.hpp</code> file from the course's git repository.]</strong></p>
+<p>Both the copy constructor and the overridden assignment operator will take advantage of the private <code>copy</code> method described in this section. The method signature is in the private section at the end of the class declaration:</p>
+<pre><code>void copy(const SLL&lt;T&gt; &amp;otherList);</code></pre>
+<p>We can see that the method does not have a return value, and that it takes one parameter: a constant reference to another <code>SLL</code> object. The goal of the method is to make the current list be just like the parameter, in a deep-copy manner.</p>
+<p>The code for the method itself looks like this:</p>
+<pre><code>template &lt;class T&gt; 
+void SLL&lt;T&gt;::copy(const SLL&lt;T&gt; &amp;otherList) {
+    // remove any existing data
+    clear();
+
+
+    // initialize two cursors: one for this list, one for the other list
+    Node *pCurr = pHead, *pOtherCurr = otherList.pHead;
+
+
+    // iterate through the nodes in the other list
+    while(pOtherCurr != 0) {
+        // special case: the first node changes the head pointer
+        if(pHead == 0) {
+            pHead = new Node(pOtherCurr-&gt;data, 0);
+            pCurr = pHead;
+        } else {
+            // general case: add new node to end of this list
+            pCurr-&gt;pNext = new Node(pOtherCurr-&gt;data, 0);
+            pCurr = pCurr-&gt;pNext;
+        }
+
+
+        // move to next node in other list, and increment our size
+        pOtherCurr = pOtherCurr-&gt;pNext;
+        n++;
+    }
+}</code></pre>
+<p>The first thing we do is remove any existing data in the current list, so that we do not have a memory leak. We do this via a call to the <code>clear</code> method.</p>
+<p>Next, we copy all of the data from the parameter <code>otherList</code> to the current list. One might be tempted to do this via a series of <code>add</code> method calls, like this:</p>
+<pre><code>Node *pCurr = otherList.pHead;
+while(pCurr != 0) {
+  this-&gt;add(pCurr-&gt;data);
+  pCurr = pCurr-&gt;pNext;
+}</code></pre>
+<p>While this is attractive because it reuses code that has already been written (<code>add</code>), it doesn't work. The problem is that the <code>add</code> method adds to the <em>front</em> of the list, rather than the back. So, if the values in <code>otherList</code> are <code>[1, 2, 3, 4]</code>, then the current list would be built like this:</p>
+<ul>
+<li><p>Add 1. The current list is now <code>[1]</code>.</p></li>
+<li><p>Add 2. The current list is now <code>[2, 1]</code>.</p></li>
+<li><p>Add 3. The current list is now <code>[3, 2, 1]</code>.</p></li>
+<li><p>Add 4. The current list is now <code>[4, 3, 2, 1]</code>.</p></li>
+</ul>
+<p>As you can see, if we were to use the <code>add</code> method in our <code>copy</code> method, we would end up with a reversed copy of <code>otherList</code>. So, we cannot just call <code>add</code> to copy the parameter list values into the current list.</p>
+<p>So, our approach will be to have two cursor pointers, <code>pCurr</code> and <code>pOtherCurr</code>, which will point to the current node in the current and parameter list, respectively. Then, we have a <code>while</code> loop to iterate through the nodes of <code>otherList</code>. If <code>otherList</code> happens to be empty, the loop body never happens and the method ends, leaving this empty too.</p>
+<p>If <code>otherList</code> does have elements, then the body of the loop does happen at least once. The first time, the <code>if</code> statement detects the special case situation and changes the value of the current list's <code>pHead</code> pointer to point to a new node containing a copy of <code>otherList</code>'s first element data. Otherwise, the general case happens, and we add a new node to the end of the current list, containing a copy of the corresponding elements from <code>otherList</code>. After the <code>if</code>, we update the size variable <code>n</code> and move <code>pOtherCurr</code> to the next element in <code>otherList</code>. The loop terminates when we have iterated through all of the elements in <code>otherList</code>.</p>
+<p>At the end of <code>copy</code>, the current list has been successfully made into a deep copy of the parameter <code>otherList</code>.</p>
+<p>An implementation note is in order here, related to unit testing. The way we are using our doctest unit testing framework, we are restricted to testing only public methods for the <code>SLL</code> class, since the testing code is not a part of the <code>SLL</code> class. Therefore, we cannot write a doctest unit test for the <code>copy</code> method, because <code>copy</code> is private. So, we rely instead on the fact that <code>copy</code> will be used by the copy constructor and overridden assignment operator. If those unit tests pass, we can be pretty sure that the <code>copy</code> method is working correctly.</p>
+<h3 id="copy-constructor">Copy constructor</h3>
+<p><strong>[For this section, refer to the <code>module03\1-SLL\SLL.hpp</code> file from the course's git repository.]</strong></p>
+<p>A <em>copy constructor</em> is used to create an instance of an object that is just like an existing object. Since we have already written the <code>copy</code> method, our copy constructor will be very easy to write:</p>
+<pre><code>SLL(const SLL&lt;T&gt; &amp;otherList) : pHead(0), n(0u) { copy(otherList); }</code></pre>
+<p>We use the constructor's initialization list to set the initial values of <code>pHead</code> and <code>n</code>, and then call the private <code>copy</code> method to copy the contents of <code>otherList</code> over. The doctest unit tests for the copy constructor show how to use the copy constructor. If <code>list</code> is a populated <code>SLL&lt;int&gt;</code> object, then we can make identical deep copies like this:</p>
+<pre><code>SLL&lt;int&gt; list2(list1);
+SLL&lt;int&gt; *pList = new SLL&lt;int&gt;(list1);</code></pre>
+<h3 id="assignment-operator-override">Assignment operator override</h3>
+<p><strong>[For this section, refer to the <code>module03\1-SLL\SLL.hpp</code> file from the course's git repository.]</strong></p>
+<p>The assignment operator override is almost as simple as the copy constructor. In the class declaration, we see the signature of the override:</p>
+<pre><code>SLL&lt;T&gt; &amp;operator=(const SLL&lt;T&gt; &amp;otherList);</code></pre>
+<p>The return type is a reference to the current list, so that we can chain together assignment operators, like this:</p>
+<pre><code>list2 = list3 = list1;</code></pre>
+<p>This code would make both <code>list2</code> and <code>list3</code> deep copies of <code>list1</code>. The code for the override is scarcely more complicated than the copy constructor:</p>
+<pre><code>template &lt;class T&gt;
+SLL&lt;T&gt; &amp; SLL&lt;T&gt;::operator=(const SLL&lt;T&gt; &amp;otherList) {
+    // copy other list contents to this object
+    copy(otherList);
+
+
+    return *this;
+}</code></pre>
+<p>We perform the actual copying via the private <code>copy</code> method, and then return the dereferenced <code>this</code> pointer, i.e., the current <code>SLL</code> object.</p>
+<h3 id="sample-application-keyword-search">Sample application: keyword search</h3>
+<p><strong>[For this section, refer to code in the <code>module03\3-KeywordSearch</code> directory in the course's git repository.]</strong></p>
+<p>Our sample application in this module is a keyword search function, for a small number of motion pictures, using data from the <a href="https://www.imdb.com/">IMDb</a> Web site. A text file, <code>movies.txt</code>, that contains information about several movies: their title, year of release, and several keywords that somehow relate to the plot of the movie. The first few lines of the file look like this:</p>
+<pre><code>Godzilla vs. Kong
+2021
+kaiju
+monsterverse
+giant monster
+monster versus monster
+.
+.
+.</code></pre>
+<p>Our application (<code>KeywordSearch.cpp</code>) opens the file and creates a <code>SLL</code> of <code>Movie</code> objects that encapsulate the title, release year, and keywords for each movie in the file. The <code>Movie</code> class is simple, as shown in this UML class diagram:</p>
+<p><img src="https://doane.instructure.com/files/910658/download?download_frd=1" alt="Movie class diagram" title="Movie class diagram"/></p>
+<p>The only interesting aspect of this class is the override of the equality operator (<code>==</code>). Take a look at the declaration of the override in the <code>Movie.h</code> file:</p>
+<pre><code>bool operator==(std::string keyword);</code></pre>
+<p>You may notice that the right-hand side of the operator is a <code>std::string</code> object versus a <code>Movie</code> object. This is somewhat akin to comparing apples and oranges, but for this application it makes sense. We will define this equality operator to return <code>true</code> if the movie's keyword list contains the string in the <code>keyword</code> parameter. That way, we can iterate through a list of <code>Movie</code> objects, collecting all of them that match the keyword.</p>
+<p>The implementation of this override can be found in <code>Movie.cpp</code>:</p>
+<pre><code>bool Movie::operator==(std::string keyword) {
+    return keywords.contains(keyword) != -1;
+}</code></pre>
+<p>We use the <code>contains</code> method of the list, to see if the supplied keyword is in the list. If it is in the list, the return value will be an integer greater than or equal to zero; if the keyword is not in the list, the return value will be negative one. So, the Boolean expression <code>keywords.contains(keyword) != -1</code> is <code>true</code> if the keyword is in the list, <code>false</code> otherwise.</p>
+<p>The rest of the functionality for this application is in the <code>KeywordSearch.cpp</code> file. Two functions, <code>makeMovieList</code> and <code>makeKeywordList</code>, create the data structures used by the app. The former creates a list of <code>Movie</code> objects that we can search by keyword, while the latter creates a list of all the possible keywords, so they can be printed for the user.</p>
+<p>The heart of the application is the <code>findKeywordMatches</code> function:</p>
+<pre><code>SLL&lt;Movie&gt; findKeywordMatches(const SLL&lt;Movie&gt; &amp;movies, std::string keyword) {
+    SLL&lt;Movie&gt; matches;
+
+
+    for(size_t i = 0; i &lt; movies.size(); i++) {
+        Movie m = movies.get(i);
+        if(m == keyword) {
+            matches.add(m);
+        }
+    }
+
+
+    return matches;
+}</code></pre>
+<p>The function takes two parameters: a reference to the list of movie objects to search, and a keyword to search for. The function returns a list of all the movies which contain that keyword.</p>
+<p>Inside the function, we create an empty <code>SLL&lt;Movie&gt;</code> data structure, then populate it by iterating through all of the movies. We add every movie that matches the keyword parameter. This is where the <code>Movie</code> override of the equality operator is used, in the <code>m == keyword</code> Boolean expression. After the loop, we return the list containing all of the matching movies.</p>
+<p>Note that this function would not work without our implementation of the assignment override for the <code>SLL</code> class! The <code>return matches</code> statement, without the assignment override, would do a shallow copy as the <code>matches</code> list is copied into the return value. This is problematic, because <code>matches</code> disappears when the function ends. Our main program would have a shallow copy list, with a head pointer pointing to memory that has been returned to the operating system. With the assignment override, the return value is a deep copy of the local list <code>matches</code>, and so when <code>matches</code> goes out of scope, the main program still has a copy of all the movies that matched the keyword.</p>
+<p>Another thing of note here is that this is not a particularly efficient piece of code, since the <code>SLL</code> <code>get(i)</code> method has to start at the beginning of the list and iterate through all of the nodes leading up to the element with index <code>i</code>. We will learn how to quantify the performance of our code in the next module, <em>and</em> we will introduce a new concept (iterators) that will allow us to perform a task like this more efficiently.</p>
+<p>The rest of the code in <code>KeywordSearch.cpp</code> is chiefly concerned with printing menus and responding to user input. We will not cover that code here, but feel free to examine it on your own.</p>
+<p>A sample execution of the application might go like this:</p>
+<pre><code>Select from one of the following options:
+        1) Display the movies in our database
+        2) Display a list of possible keywords
+        3) Perform a keyword search of the database
+        9) Exit the application
+Enter selection: 1
+        Predator (1987)
+        Alien 3 (1992)
+        Aliens (1986)
+        Alien (1979)
+        Postcards from the Edge (1990)
+        Heartburn (1986)
+        Silkwood (1983)
+.
+.
+.
+        Godzilla vs. Kong (2021)
+
+
+Select from one of the following options:
+        1) Display the movies in our database
+        2) Display a list of possible keywords
+        3) Perform a keyword search of the database
+        9) Exit the application
+Enter selection: 2
+             name as title               name in title                         007
+                     1940s              abusive mother                   acid burn
+                acrophobia              action heroine        actor executive prod
+                   actress                    adultery               airport apron
+
+
+.
+.
+.
+            worst director                 worst movie                      writer
+       wrongful conviction       wrongful imprisonment              year 1831
+                   z movie                      zombie               zombie attack
+
+
+Select from one of the following options:
+        1) Display the movies in our database
+        2) Display a list of possible keywords
+        3) Perform a keyword search of the database
+        9) Exit the application
+Enter selection: 3
+Enter keyword: f rated
+Movies matching f rated
+        Black Widow (2021)
+        Prizzi&#39;s Honor (1985)
+        Silkwood (1983)
+        Heartburn (1986)
+        Postcards from the Edge (1990)
+
+
+Select from one of the following options:
+        1) Display the movies in our database
+        2) Display a list of possible keywords
+        3) Perform a keyword search of the database
+        9) Exit the application
+Enter selection: 9</code></pre>
+<p>In the next module, we will learn about how to analyze the <em>time complexity</em> of our code, and we will add one more element to our singly-linked list: an <em>iterator</em>.</p>
+</body>
+</html>

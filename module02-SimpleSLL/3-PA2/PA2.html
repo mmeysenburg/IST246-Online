@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h2 id="random-poetry-man">Random Poetry, Man</h2>
+<p>In this assignment, you will modify the <code>SimpleSLL</code> class so that it can be used in a random poetry program. When finished, the <code>RandomPoet</code> application will use a large dictionary of English words to slap together a series of random words into a &quot;poem&quot; of sorts. When complete, the program's output might look something like this:</p>
+<pre><code>Welcome to the random poetry generator!
+Please wait while the dictionary is loaded.
+Let&#39;s make some poetry, dude! Enter the number of lines: 4
+Radical! Now, enter the number of words per line: 3
+
+
+Here&#39;s your poem, man!
+
+
+        variation&#39;s rigidness satisfying
+        frisks rodeoing searches
+        inveighs Berg snots
+        entry crimper&#39;s arch
+
+
+Would you like to make another poem? Enter 1 for yes, 0 for no: 1
+Let&#39;s make some poetry, dude! Enter the number of lines: 3
+Radical! Now, enter the number of words per line: 2
+
+
+Here&#39;s your poem, man!
+
+
+        laptop sentence
+        Whitlock flysheets
+        nasturtium&#39;s Reyna&#39;s
+
+
+Would you like to make another poem? Enter 1 for yes, 0 for no: 0</code></pre>
+<p>You will find the files you need in the <code>module02-SimpleSLL\3-PA2</code> directory of the course's git repository.</p>
+<h3 id="files-in-the-directory">Files in the directory</h3>
+<p><code>dictionary.txt</code> : a file containing approximately 150,000 correctly-spelled English words, one per line.</p>
+<p><code>makefile</code> : makefile for building the modified <code>SimpleSLLTests</code> unit test application, and the <code>RandomPoet</code> main application.</p>
+<p><code>RandomPoet.cpp</code> : main program for the <code>RandomPoet</code> application. Edit this file and search for the <code>TODO</code> comments.</p>
+<p><code>SimpleSLL.hpp</code> : simple singly-linked list for the application. Edit this file and search for the <code>TODO</code> comments.</p>
+<p><code>SimpleSLLTests.cpp</code> : phantom main program file for making the <code>SimpleSLLTests</code> unit test application.</p>
+<h3 id="instructions">Instructions</h3>
+<p>Note: A pointer to a <code>mt19937_64</code> pseudo-random number generator has been added as a private field to the <code>SimpleSLL</code> class, and the constructor and destructor have been modified to allocate / free the object. Use this object, accessed via the <code>pPrng</code> pointer, to complete this assignment. In addition, unit test code has been written for the <code>getRandom()</code> method you will write.</p>
+<ol style="list-style-type: decimal">
+<li><p>Edit <code>SimpleSLL.hpp</code> and search for the <code>TODO</code> comments. Complete the following tasks:</p>
+<ol style="list-style-type: lower-alpha">
+<li><p>Write a Doxygen comment header for the <code>getRandom()</code> method.</p></li>
+<li><p>Complete the code for the <code>getRandom()</code> method. Use the <code>pPrng</code> pointer and a <code>std::uniform_int_distribution&lt;size_t&gt;</code> object to pick a random index between 0 and <code>n</code> - 1, and then return that element from the list.</p></li>
+<li><p>Built the project and execute the `SimpleSLLTests' unit tests. Make sure they all pass before moving on to the next step.</p></li>
+</ol></li>
+<li><p>Edit <code>RandomPoet.cpp</code> and search for the <code>TODO</code> comments. Complete the following tasks:</p>
+<ol style="list-style-type: lower-alpha">
+<li><p>Complete the Doxygen header comments at the top of the program.</p></li>
+<li><p>Call the <code>getRandom()</code> method from the dictionary list, and print out the returned word, followed by a space, inside the poem-producing loop.</p></li>
+</ol></li>
+<li><p>Before submitting your code, execute the <code>make clean</code> command to remove the executables and any object files.</p></li>
+<li><p>Once the unit tests pass and the application produces the expected results, zip the entire <code>3-PA2</code> directory and submit the resulting .zip file via this assignment.</p></li>
+</ol>
+<h3 id="grading">Grading</h3>
+<p>You will receive one point for the assignment if all the Pass criteria in the attached rubric are met; otherwise, you will receive zero points for the assignment.</p>
+</body>
+</html>
