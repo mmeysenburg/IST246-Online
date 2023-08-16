@@ -28,4 +28,4 @@ documentation for the main C++ classes in the repository
 
 - `module07-Graphs`: code for module 7
 
-- `module08-Intro`: code for module 8
+- `module08-SearchNSort`: code for module 8
