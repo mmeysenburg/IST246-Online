@@ -1,0 +1,20 @@
+% LaTeX document to produce ``pretty-printed'' source code listing
+\documentclass[12pt,letterpaper]{letter}
+
+\usepackage[letterpaper, total={7in, 10in}]{geometry}
+
+\usepackage{courier}
+
+\usepackage{listings}
+
+\begin{document}
+
+\lstset{firstnumber=1, numbers=left, caption=Coordinate.hpp, language=C++,basicstyle=\footnotesize\ttfamily}
+\lstinputlisting{Coordinate.hpp}
+
+\hrule
+
+\lstset{firstnumber=1, numbers=left, caption=MontePi.cpp, language=C++,basicstyle=\footnotesize\ttfamily}
+\lstinputlisting{MontePi.cpp}
+
+\end{document}
