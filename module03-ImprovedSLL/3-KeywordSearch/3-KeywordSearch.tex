@@ -1,0 +1,30 @@
+% LaTeX document to produce ``pretty-printed'' source code listing
+\documentclass[12pt,letterpaper]{letter}
+
+\usepackage[letterpaper, total={7in, 10in}]{geometry}
+
+\usepackage{courier}
+
+\usepackage{listings}
+
+\begin{document}
+
+\lstset{firstnumber=1, numbers=left, caption=SLL.hpp, language=C++,basicstyle=\footnotesize\ttfamily}
+\lstinputlisting{../1-SLL/SLL.hpp}
+
+\hrule
+
+\lstset{firstnumber=1, numbers=left, caption=Movie.h, language=C++,basicstyle=\footnotesize\ttfamily}
+\lstinputlisting{Movie.h}
+
+\hrule
+
+\lstset{firstnumber=1, numbers=left, caption=Movie.cpp, language=C++,basicstyle=\footnotesize\ttfamily}
+\lstinputlisting{Movie.cpp}
+
+\hrule
+
+\lstset{firstnumber=1, numbers=left, caption=KeywordSearch.cpp, language=C++,basicstyle=\footnotesize\ttfamily}
+\lstinputlisting{KeywordSearch.cpp}
+
+\end{document}
