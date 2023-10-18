@@ -1,0 +1,31 @@
+% LaTeX document to produce ``pretty-printed'' source code listing
+\documentclass[10pt,letterpaper]{letter}
+
+\usepackage[letterpaper, total={7in, 10in}]{geometry}
+
+\usepackage{courier}
+
+\usepackage{listings}
+
+\begin{document}
+
+\lstset{firstnumber=1, numbers=left, caption=DLL.hpp, language=C++,basicstyle=\footnotesize\ttfamily}
+\lstinputlisting{../1-DLL/DLL.hpp}
+
+\hrule
+
+\lstset{firstnumber=1, numbers=left, caption=Stack.hpp, language=C++,basicstyle=\footnotesize\ttfamily}
+\lstinputlisting{../2-Stack/Stack.hpp}
+
+\hrule
+
+\lstset{firstnumber=1, numbers=left, caption=Queue.hpp, language=C++,basicstyle=\footnotesize\ttfamily}
+\lstinputlisting{../3-Queue/Queue.hpp}
+
+\hrule
+
+\lstset{firstnumber=1, numbers=left, caption=RPN.cpp, language=C++,basicstyle=\footnotesize\ttfamily}
+\lstinputlisting{RPN.cpp}
+
+
+\end{document}
